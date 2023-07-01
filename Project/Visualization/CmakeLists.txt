@@ -1,0 +1,40 @@
+add_executable(chess WIN32 main.cpp)
+set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+
+#Include SFML
+
+set(SFML_STATIC_LIBRARIES TRUE)
+
+if (CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+    find_package(SFML 2.6
+        COMPONENTS
+            system-d window-d graphics-d audio-d REQUIRED
+    )
+else()
+    find_package(SFML 2.6
+        COMPONENTS
+            system window graphics audio REQUIRED
+    )
+endif()
+
+target_compile_features(chess PRIVATE cxx_std_17)
+target_compile_definitions(chess PRIVATE SFML_STATIC)
+target_link_libraries(chess sfml-window sfml-graphics)
+
+#
+##Copy dlls to bin
+#
+#add_custom_command(TARGET chess POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy
+#            ${SFML_DLLS}
+#            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/" COMMAND_EXPAND_LISTS
+#)
+#
+#install(TARGETS chess)
+#
+#ADD_CUSTOM_TARGET(link_target POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E create_symlink
+#            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/chess.exe
+#            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../chess.exe
+#)
+#
