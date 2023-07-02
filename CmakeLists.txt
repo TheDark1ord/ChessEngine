@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27.0)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #sset(CMAKE_GENERATOR_PLATFORM win64)
 
@@ -8,14 +8,16 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../app/bin)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
 #----Link libraries here----
 set(LIB_FOLDER_PATH "C:/Programming/C++/Libraries")
 set(SFML_DIR "${LIB_FOLDER_PATH}/SFML-2.6.0/")
 set(CMAKE_PREFIX_PATH "${SFML_DIR}/lib/cmake/SFML/")
 
-message(STATUS ${CMAKE_PREFIX_PATH})
-
 project(chess-engine VERSION 0.1 LANGUAGES CXX)
+enable_testing()
 
 add_subdirectory(Project/MoveEvaluation)
 add_subdirectory(Project/MoveGeneration)
