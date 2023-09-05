@@ -1,4 +1,8 @@
-app/
+app/*
+!app/Data
+
 build/
 lib/
+
 .vscode/
+.vs/
