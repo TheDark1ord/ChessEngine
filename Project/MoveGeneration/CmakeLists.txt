@@ -1,13 +1,16 @@
 add_library(MoveGeneration STATIC
     src/MoveGeneration.cpp)
-install(FILES include/MoveGeneration.h DESTINATION include)
+install(FILES
+    include/MoveGeneration.h, include/MagicNumbers.h
+    DESTINATION
+    include
+)
 
 set_target_properties(MoveGeneration PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(MoveGenerationTest
     test/main_test.cpp)
 target_link_libraries(MoveGenerationTest PRIVATE MoveGeneration)
-target_include_directories(MoveGenerationTest PRIVATE include)
 
 #set(UNIT_TEST MoveGenerationTest)
 add_test(NAME MoveGenerationTest COMMAND MoveGenerationTest)
