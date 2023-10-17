@@ -1,26 +1,6 @@
 #include <iostream>
 #include "../include/MoveGeneration.h"
 
-inline void movgen::set_bit(bitboard* b, bpos pos)
-{
-    *b |= 1 << pos;
-}
-
-inline void movgen::cleat_bit(bitboard* b, bpos pos)
-{
-    *b |= ~(1 << pos);
-}
-
-inline void movgen::flip_bit(bitboard* b, bpos pos)
-{
-    *b ^= 1 << pos;
-}
-
-inline bool movgen::read_bit(bitboard& b, bpos pos)
-{
-    return b & (1 << pos);
-}
-
 inline std::vector<bpos> movgen::bitscan(bitboard board)
 {
     // https://www.chessprogramming.org/BitScan#Bitscan_by_Modulo
@@ -37,12 +17,12 @@ inline std::vector<bpos> movgen::bitscan(bitboard board)
     };
 
     std::vector<bpos> set_bits;
-    // TODO: Test optimal reserve number
+    // TODO: Test optimal reserve number and probably update to better algorithm
     set_bits.reserve(8);
 
     while (board != 0)
     {
-        set_bits.push_back(lookup67[board & (~board + 1)]);
+        set_bits.push_back(lookup67[(board & (~board + 1)) % 67]);
         board &= board - 1;
     }
 
@@ -51,7 +31,7 @@ inline std::vector<bpos> movgen::bitscan(bitboard board)
 
 Piece movgen::get_piece(BoardPosition& b_pos, bpos pos, unsigned char color)
 {
-    bitboard mask = 1 << pos;
+    bitboard mask = 1ull << pos;
     Piece return_piece = static_cast<Piece>(0);
 
     if (color != 2)
@@ -79,7 +59,7 @@ Piece movgen::get_piece(BoardPosition& b_pos, bpos pos, unsigned char color)
 
 size_t std::hash<movgen::BoardPosition>::operator()(movgen::BoardPosition const& p) const noexcept
 {
-    //TODO:
+    //TODO: board hash
     size_t hash = 0;
     return size_t();
 }
@@ -226,7 +206,7 @@ EnPassant:
         return_pos.en_passant = (fen[it] - 'a') + (fen[++it] - '1') * 8;
     }
     // Test that en passant square is on 3rd or 6th row
-    if ((1 << return_pos.en_passant) | 18446463698227757055)
+    if ((1ull << return_pos.en_passant) | 18446463698227757055)
     {
         throw std::runtime_error("Invalid fen");
     }
@@ -250,17 +230,17 @@ void movgen::generateKingMoves(movgen::BoardPosition& pos, movgen::GeneratedMove
 
 }
 
-void movgen::generateQueenMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves)
+void movgen::generateQueenMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves, movgen::GeneratedMagics* magics)
 {
 
 }
 
-void movgen::generateRookMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves)
+void movgen::generateRookMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves, movgen::GeneratedMagics* magics)
 {
 
 }
 
-void movgen::generateBishopMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves)
+void movgen::generateBishopMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves, movgen::GeneratedMagics* magics)
 {
 
 }

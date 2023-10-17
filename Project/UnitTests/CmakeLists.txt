@@ -1,0 +1,8 @@
+
+set(MOVE_GENERATION_SOURCE_DIR "${PROJECT_SOURCE_DIR}/Project/MoveGeneration")
+include_directories("${MOVE_GENERATION_SOURCE_DIR}/include")
+
+add_executable(SlidingPiecesTest "./MoveGeneration/sliding_pieces.cpp")
+target_link_libraries(SlidingPiecesTest PRIVATE MoveGeneration)
+
+add_test(NAME SlidingPiecesTest COMMAND SlidingPiecesTest)

@@ -55,9 +55,9 @@ namespace movgen
     // These functions generate pseudo legal moves for a given position
     // Generated moves is expected to be empty
     void generateKingMoves(BoardPosition& board, GeneratedMoves* moves);
-    void generateQueenMoves(BoardPosition& board, GeneratedMoves* moves);
-    void generateRookMoves(BoardPosition& board, GeneratedMoves* moves);
-    void generateBishopMoves(BoardPosition& board, GeneratedMoves* moves);
+    void generateQueenMoves(BoardPosition& board, GeneratedMoves* moves, GeneratedMagics* magics);
+    void generateRookMoves(BoardPosition& board, GeneratedMoves* moves, GeneratedMagics* magics);
+    void generateBishopMoves(BoardPosition& board, GeneratedMoves* moves, GeneratedMagics* magics);
     void generateKnightMoves(BoardPosition& board, GeneratedMoves* moves);
     void generatePawnMoves(BoardPosition& board, GeneratedMoves* moves);
 }

@@ -92,10 +92,22 @@ namespace movgen
         unsigned int fullmove;
     };
 
-    inline bool read_bit(bitboard& b, bpos pos);
-    inline void set_bit(bitboard* b, bpos pos);
-    inline void cleat_bit(bitboard* b, bpos pos);
-    inline void flip_bit(bitboard* b, bpos pos);
+    inline void set_bit(bitboard* b, bpos pos)
+    {
+        *b |= 1ull << pos;
+    }
+    inline void clear_bit(bitboard* b, bpos pos)
+    {
+        *b |= ~(1ull << pos);
+    }
+    inline void flip_bit(bitboard* b, bpos pos)
+    {
+        *b ^= 1ull << pos;
+    }
+    inline bool read_bit(bitboard& b, bpos pos)
+    {
+        return b & (1ull << pos);
+    }
 
     /// @brief converts a bitboard into a sequense of values between 0 and 63, that
     /// correspond to positions of set bits in the bitboard
