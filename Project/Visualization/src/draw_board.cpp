@@ -165,11 +165,8 @@ sf::Texture Board::parse_svg_file(const char* filename)
     image_path = nsvgParseFromFile(filename, "px", 96);
 
     if (!std::filesystem::exists(filename)) {
-        std::string err_string = std::format(
-            "File '{}' not found",
-            filename
-        );
-        throw std::exception(err_string.c_str());
+        std::string err_string = "File not found";
+        throw std::runtime_error(err_string.c_str());
     }
 
     struct NSVGrasterizer* rast = nullptr;

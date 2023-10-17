@@ -4,7 +4,7 @@
 inline std::vector<bpos> movgen::bitscan(bitboard board)
 {
     // https://www.chessprogramming.org/BitScan#Bitscan_by_Modulo
-    static constexpr bpos lookup67[68] = {
+    static constexpr int lookup67[68] = {
         64,  0,  1, 39,  2, 15, 40, 23,
         3, 12, 16, 59, 41, 19, 24, 54,
         4, -1, 13, 10, 17, 62, 60, 28,
@@ -146,7 +146,7 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen)
 
     // Bitboard, representing 1st and last rows
     // set to 1
-    bitboard top_and_bottom = 18374686479671623935;
+    bitboard top_and_bottom = 18374686479671623935ull;
     // Test that no pawns are on the first and last rows
     if (return_pos.w_pawns | top_and_bottom ||
         return_pos.b_pawns | top_and_bottom)
@@ -206,7 +206,7 @@ EnPassant:
         return_pos.en_passant = (fen[it] - 'a') + (fen[++it] - '1') * 8;
     }
     // Test that en passant square is on 3rd or 6th row
-    if ((1ull << return_pos.en_passant) | 18446463698227757055)
+    if ((1ull << return_pos.en_passant) | 18446463698227757055ull)
     {
         throw std::runtime_error("Invalid fen");
     }

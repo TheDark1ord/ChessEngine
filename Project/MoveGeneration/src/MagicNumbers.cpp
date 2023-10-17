@@ -34,13 +34,10 @@ uint64_t movgen::get_magic_index_rook(bitboard blocker, Magic& magic)
 
 uint64_t movgen::_random_uint64()
 {
-    static std::random_device rd;
-    std::mt19937_64 gen(rd());
-    static std::uniform_int_distribution<unsigned long long> dis(
-        std::numeric_limits<std::uint64_t>::min(),
-        std::numeric_limits<std::uint64_t>::max()
-    );
-    return dis(gen);
+    uint64_t u1, u2, u3, u4;
+    u1 = (uint64_t)(rand()) & 0xFFFF; u2 = (uint64_t)(rand()) & 0xFFFF;
+    u3 = (uint64_t)(rand()) & 0xFFFF; u4 = (uint64_t)(rand()) & 0xFFFF;
+    return u1 | (u2 << 16) | (u3 << 32) | (u4 << 48);
 }
 
 bitboard movgen::_random_uint64_fewbits()

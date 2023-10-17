@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.23.0)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #sset(CMAKE_GENERATOR_PLATFORM win64)
+
+if(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE Debug)
+endif()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../lib)
@@ -15,8 +19,6 @@ foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
     set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} )
     set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} )
 endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
-
-#Set path to vcpkg
 
 #----Link libraries here----
 set(LIB_FOLDER_PATH "C:/Programming/C++/Libraries")
@@ -32,7 +34,3 @@ add_subdirectory(Project/MoveEvaluation)
 add_subdirectory(Project/MoveGeneration)
 add_subdirectory(Project/Visualization)
 add_subdirectory(Project/UnitTests)
-
-if(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE Debug)
-endif()
