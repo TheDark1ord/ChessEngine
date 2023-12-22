@@ -1,6 +1,6 @@
 #include "../headers/draw_board.hpp"
 
-Board::Board(sf::Vector2u window_size)
+visual::Board::Board(sf::Vector2u window_size)
 {
     this->window_size = window_size;
     label_font.loadFromFile("../data/arial.ttf");
@@ -27,7 +27,7 @@ Board::Board(sf::Vector2u window_size)
     b_king_texture = this->parse_svg_file("../data/b_kg.svg");
 }
 
-void Board::resize(sf::Vector2u new_window_size)
+void visual::Board::resize(sf::Vector2u new_window_size)
 {
     this->board_size = static_cast<int>(static_cast<float>(new_window_size.x)
         * board_scale * inner_board_scale);
@@ -39,7 +39,7 @@ void Board::resize(sf::Vector2u new_window_size)
     place_squares();
 }
 
-void Board::draw_board(sf::RenderWindow* window)
+void visual::Board::draw_board(sf::RenderWindow* window)
 {
     window->draw(squares);
     window->draw(char_label);
@@ -54,21 +54,21 @@ void Board::draw_board(sf::RenderWindow* window)
     window->draw(knight);
 }
 
-sf::Vector2f Board::screen_to_board(sf::Vector2f screen_pos)
+sf::Vector2f visual::Board::screen_to_board(sf::Vector2f screen_pos)
 {
     //TODO: finish this
     throw std::logic_error("Not implemented");
     return sf::Vector2f();
 }
 
-sf::Vector2f Board::board_to_screen(sf::Vector2f board_pos)
+sf::Vector2f visual::Board::board_to_screen(sf::Vector2f board_pos)
 {
     //TODO: finish this
     throw std::logic_error("Not implemented");
     return sf::Vector2f();
 }
 
-void Board::place_border()
+void visual::Board::place_border()
 {
     sf::Vector2f board_center = { window_size.x / 2.0f, window_size.y / 2.0f };
     sf::Vector2f center_origin = { board_size / 2.0f, board_size / 2.0f };
@@ -94,7 +94,7 @@ void Board::place_border()
     inner.setFillColor(sf::Color::Transparent);
 }
 
-void Board::place_labels()
+void visual::Board::place_labels()
 {
     static float label_size = (board_size * (1 - inner_board_scale)) * 0.5f;
     //static float label_size = 46;
@@ -124,7 +124,7 @@ void Board::place_labels()
     number_label.setString("12345678");
 }
 
-void Board::place_squares()
+void visual::Board::place_squares()
 {
     sf::Color cur_col;
     sf::Vertex* squares = new sf::Vertex[64 * 4];
@@ -159,7 +159,7 @@ void Board::place_squares()
     this->squares.update(squares);
 }
 
-sf::Texture Board::parse_svg_file(const char* filename)
+sf::Texture visual::Board::parse_svg_file(const char* filename)
 {
     NSVGimage* image_path;
     image_path = nsvgParseFromFile(filename, "px", 96);

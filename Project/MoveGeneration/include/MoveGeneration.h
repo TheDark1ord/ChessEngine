@@ -2,6 +2,7 @@
 #define MOVGEN_H
 
 #include <vector>
+#include <array>
 #include <set>
 #include <regex>
 #include <exception>
@@ -27,11 +28,22 @@ namespace movgen
         bitboard b_pawn_attacks = 0;
         bitboard w_pawn_attacks = 0;
 
+
+
         // All squares that are under attack of respective side
         bitboard b_attacks = 0;
         bitboard w_attacks = 0;
 
         std::vector<Move> moves;
+    };
+
+    // Calculated and cashed moves for faster computation
+    struct MoveCashe
+    {
+        GeneratedMagics* magics;
+
+        bitboard king_moves_bit[64];
+        bitboard knight_moves_bit[64];
     };
 
     const char* fen_regex_string = "^"
@@ -54,12 +66,28 @@ namespace movgen
     // and keep the rest intact
     // These functions generate pseudo legal moves for a given position
     // Generated moves is expected to be empty
-    void generateKingMoves(BoardPosition& board, GeneratedMoves* moves);
+    void generateKingMoves(BoardPosition& board, GeneratedMoves* moves, MoveCashe* cashe);
     void generateQueenMoves(BoardPosition& board, GeneratedMoves* moves, GeneratedMagics* magics);
     void generateRookMoves(BoardPosition& board, GeneratedMoves* moves, GeneratedMagics* magics);
     void generateBishopMoves(BoardPosition& board, GeneratedMoves* moves, GeneratedMagics* magics);
-    void generateKnightMoves(BoardPosition& board, GeneratedMoves* moves);
+    void generateKnightMoves(BoardPosition& board, GeneratedMoves* moves, MoveCashe* cashe);
     void generatePawnMoves(BoardPosition& board, GeneratedMoves* moves);
+
+    inline void generateQueenMoves(BoardPosition& board, GeneratedMoves* moves, MoveCashe* cashe)
+    {
+        movgen::generateQueenMoves(board, moves, cashe->magics);
+    }
+    inline void generateRookMoves(BoardPosition& board, GeneratedMoves* moves, MoveCashe* cashe)
+    {
+        movgen::generateRookMoves(board, moves, cashe->magics);
+    }
+    inline void generateBishopMoves(BoardPosition& board, GeneratedMoves* moves, MoveCashe* cashe)
+    {
+        movgen::generateBishopMoves(board, moves, cashe->magics);
+    }
+
+    void cacheKingMoves(MoveCashe* cashe);
+    void cacheKnightMoves(MoveCashe* cashe);
 }
 
 #endif

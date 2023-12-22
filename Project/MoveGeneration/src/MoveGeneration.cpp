@@ -225,7 +225,7 @@ std::string movgen::board_to_fen(movgen::BoardPosition& pos)
     return std::string();
 }
 
-void movgen::generateKingMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves)
+void movgen::generateKingMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves, MoveCashe* cashe)
 {
 
 }
@@ -245,7 +245,7 @@ void movgen::generateBishopMoves(movgen::BoardPosition& pos, movgen::GeneratedMo
 
 }
 
-void movgen::generateKnightMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves)
+void movgen::generateKnightMoves(movgen::BoardPosition& pos, movgen::GeneratedMoves* moves, MoveCashe* cashe)
 {
 
 }
@@ -320,4 +320,20 @@ void movgen::generatePawnMoves(movgen::BoardPosition& board, movgen::GeneratedMo
         moves->moves.push_back(Move(B_PAWN, move + 7, move, get_piece(board, move, 1)));
     for (auto move : movgen::bitscan(right_pawn_captures & bottom_edge))
         moves->moves.push_back(Move(B_PAWN, move + 9, move, get_piece(board, move, 1), 5));
+}
+
+void movgen::cacheKingMoves(MoveCashe * cashe)
+{
+    for (int sq = 0; sq < 64; sq++)
+    {
+
+    }
+}
+
+void movgen::cacheKnightMoves(MoveCashe * cashe)
+{
+    for (int sq = 0; sq < 64; sq++)
+    {
+
+    }
 }

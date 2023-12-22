@@ -32,7 +32,7 @@ uint64_t movgen::get_magic_index_rook(bitboard blocker, Magic& magic)
     return index;
 }
 
-uint64_t movgen::_random_uint64()
+uint64_t _movgen::random_uint64()
 {
     uint64_t u1, u2, u3, u4;
     u1 = (uint64_t)(rand()) & 0xFFFF; u2 = (uint64_t)(rand()) & 0xFFFF;
@@ -40,24 +40,24 @@ uint64_t movgen::_random_uint64()
     return u1 | (u2 << 16) | (u3 << 32) | (u4 << 48);
 }
 
-bitboard movgen::_random_uint64_fewbits()
+bitboard _movgen::random_uint64_fewbits()
 {
-    return _random_uint64() & _random_uint64() & _random_uint64();
+    return random_uint64() & random_uint64() & random_uint64();
 }
 
-bitboard movgen::_get_next_blocker(bitboard current, bitboard blocker_mask)
+bitboard _movgen::get_next_blocker(bitboard current, bitboard blocker_mask)
 {
     return (current - blocker_mask) & blocker_mask;
 }
 
-int movgen::count_1s(bitboard b)
+int _movgen::count_1s(bitboard b)
 {
     int r = 0;
     for (r = 0; b; r++, b &= b - 1);
     return r;
 }
 
-bitboard movgen::_generate_bishop_mask(bpos sq)
+bitboard _movgen::generate_bishop_mask(bpos sq)
 {
     bitboard attacks = 0;
 
@@ -73,7 +73,7 @@ bitboard movgen::_generate_bishop_mask(bpos sq)
     return attacks;
 }
 
-bitboard movgen::_generate_bishop_moves(bitboard blocker, bpos sq)
+bitboard _movgen::generate_bishop_moves(bitboard blocker, bpos sq)
 {
     bitboard attacks = 0;
 
@@ -105,7 +105,7 @@ bitboard movgen::_generate_bishop_moves(bitboard blocker, bpos sq)
     return attacks;
 }
 
-bitboard movgen::_generate_rook_mask(bpos sq)
+bitboard _movgen::generate_rook_mask(bpos sq)
 {
     bitboard attacks = 0;
 
@@ -121,7 +121,7 @@ bitboard movgen::_generate_rook_mask(bpos sq)
     return attacks;
 }
 
-bitboard movgen::_generate_rook_moves(bitboard blocker, bpos sq)
+bitboard _movgen::generate_rook_moves(bitboard blocker, bpos sq)
 {
     bitboard attacks = 0;
 
@@ -160,16 +160,16 @@ void movgen::generate_magics(movgen::GeneratedMagics* gen_m)
         Magic rook_magic, bishop_magic;
 
         // Exclude border bits from mask, because they are always blocking
-        rook_magic.mask = _generate_rook_mask(pos);
-        bishop_magic.mask = _generate_bishop_mask(pos);
+        rook_magic.mask = _movgen::generate_rook_mask(pos);
+        bishop_magic.mask = _movgen::generate_bishop_mask(pos);
 
         // Keep generating new magics until there is no collisions
         while (true)
         {
-            bishop_magic.magic = _random_uint64_fewbits();
-            if (count_1s((bishop_magic.mask * bishop_magic.magic) & 0xFF00000000000000ull) < 6)
+            bishop_magic.magic = _movgen::random_uint64_fewbits();
+            if (_movgen::count_1s((bishop_magic.mask * bishop_magic.magic) & 0xFF00000000000000ull) < 6)
                 continue;
-            if (try_fill_table_bishop(pos, bishop_magic, gen_m))
+            if (_movgen::try_fill_table_bishop(pos, bishop_magic, gen_m))
             {
                 gen_m->bishop_magics[pos] = bishop_magic;
                 break;
@@ -177,10 +177,10 @@ void movgen::generate_magics(movgen::GeneratedMagics* gen_m)
         }
         while (true)
         {
-            rook_magic.magic = _random_uint64_fewbits();
-            if (count_1s((rook_magic.mask * rook_magic.magic) & 0xFF00000000000000ull) < 6)
+            rook_magic.magic = _movgen::random_uint64_fewbits();
+            if (_movgen::count_1s((rook_magic.mask * rook_magic.magic) & 0xFF00000000000000ull) < 6)
                 continue;
-            if (try_fill_table_rook(pos, rook_magic, gen_m))
+            if (_movgen::try_fill_table_rook(pos, rook_magic, gen_m))
             {
                 gen_m->rook_magics[pos] = rook_magic;
                 break;
@@ -189,13 +189,13 @@ void movgen::generate_magics(movgen::GeneratedMagics* gen_m)
     }
 }
 
-bool movgen::try_fill_table_bishop(bpos sq, Magic& magic, movgen::GeneratedMagics* gen_m)
+bool _movgen::try_fill_table_bishop(bpos sq, movgen::Magic& magic, movgen::GeneratedMagics* gen_m)
 {
     bitboard blocker = 0;
     for (int i = 0; i < 512; i++) gen_m->bishop_attacks[sq][i] = 0;
     do
     {
-        bitboard attacks = movgen::_generate_bishop_moves(blocker, sq);
+        bitboard attacks = _movgen::generate_bishop_moves(blocker, sq);
         uint64_t index = movgen::get_magic_index_bishop(blocker, magic);
 
         if (gen_m->bishop_attacks[sq][index] == 0)
@@ -207,19 +207,19 @@ bool movgen::try_fill_table_bishop(bpos sq, Magic& magic, movgen::GeneratedMagic
             return 0;
         }
 
-        blocker = movgen::_get_next_blocker(blocker, magic.mask);
+        blocker = _movgen::get_next_blocker(blocker, magic.mask);
     } while (blocker != 0);
 
     return 1;
 }
 
-bool movgen::try_fill_table_rook(bpos sq, Magic& magic, movgen::GeneratedMagics* gen_m)
+bool _movgen::try_fill_table_rook(bpos sq, movgen::Magic& magic, movgen::GeneratedMagics* gen_m)
 {
     bitboard blocker = 0;
     for (int i = 0; i < 4096; i++) gen_m->rook_attacks[sq][i] = 0;
     do
     {
-        bitboard attacks = movgen::_generate_rook_moves(blocker, sq);
+        bitboard attacks = _movgen::generate_rook_moves(blocker, sq);
         uint64_t index = movgen::get_magic_index_rook(blocker, magic);
 
         if (gen_m->rook_attacks[sq][index] == 0)
@@ -230,7 +230,7 @@ bool movgen::try_fill_table_rook(bpos sq, Magic& magic, movgen::GeneratedMagics*
         {
             return 0;
         }
-        blocker = movgen::_get_next_blocker(blocker, magic.mask);
+        blocker = _movgen::get_next_blocker(blocker, magic.mask);
     } while (blocker != 0);
 
     return 1;
