@@ -11,7 +11,7 @@ Board::Board(sf::Vector2u window_size)
 
     this->resize(window_size);
 
-    w_knight_texture = this->parse_svg_file("../data/23.svg");
+    w_knight_texture = this->parse_svg_file("../data/w_kn.svg");
     b_knight_texture = this->parse_svg_file("../data/b_kn.svg");
 
     w_bishop_texture = this->parse_svg_file("../data/w_bs.svg");
@@ -48,9 +48,9 @@ void Board::draw_board(sf::RenderWindow* window)
     window->draw(outer);
 
     sf::RectangleShape knight;
-    knight.setSize({cell_size, cell_size});
+    knight.setSize({ cell_size, cell_size });
     knight.setTexture(&w_knight_texture);
-    knight.setPosition(500, 500);
+    knight.setPosition(this->board_offset, this->board_offset);
     window->draw(knight);
 }
 
@@ -108,7 +108,7 @@ void Board::place_labels()
     char_label.setPosition({
         (window_size.x - board_size - char_width + cell_size) / 2.0f,
         (window_size.y + board_size) / 2.0f
-    });
+        });
 
     number_label.setFont(label_font);
     number_label.setColor(sf::Color::Black);
@@ -117,7 +117,7 @@ void Board::place_labels()
     number_label.setPosition({
         (window_size.x - board_size - label_size * 2.5f) / 2.0f,
         (window_size.y + board_size + char_width - cell_size) / 2.0f
-    });
+        });
     number_label.setRotation(270);
 
     char_label.setString("abcdefgh");
@@ -162,27 +162,34 @@ void Board::place_squares()
 sf::Texture Board::parse_svg_file(const char* filename)
 {
     NSVGimage* image_path;
-    image_path = nsvgParseFromFile(filename, "px", 96);
+    image_path = nsvgParseFromFile(filename, "px", 96.0f);
 
     if (!std::filesystem::exists(filename)) {
         std::string err_string = "File not found";
         throw std::runtime_error(err_string.c_str());
     }
 
-    struct NSVGrasterizer* rast = nullptr;
+    static NSVGrasterizer* rast = nullptr;
     if (rast == nullptr)
     {
         rast = nsvgCreateRasterizer();
     }
 
-    int w = image_path->width, h = image_path->height;
+    int w = static_cast<int>(this->cell_size), h = static_cast<int>(this->cell_size);
+    float scale = this->cell_size / image_path->width;
+    //int w = 35; int h = 35;
     unsigned char* image = static_cast<unsigned char*>(malloc(w * h * 4));
-    nsvgRasterize(rast, image_path, 0, 0, 1, image, w, h, w * 4);
+    nsvgRasterize(rast, image_path, 0, 0, scale, image, w, h, w * 4);
 
-    sf::Texture image_texture;
-    image_texture.loadFromMemory(image, w * h * 4);
+    sf::Image sfml_image;
+    sfml_image.create(w, h, image);
 
     nsvgDelete(image_path);
+
+    sf::Texture image_texture;
+    image_texture.create(w, h);
+    image_texture.update(sfml_image);
+    image_texture.setSmooth(false);
 
     return image_texture;
 }

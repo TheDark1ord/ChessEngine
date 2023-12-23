@@ -2,14 +2,14 @@ add_executable(chess
     main.cpp
     src/draw_board.cpp
     src/event_handler.cpp)
-#set_target_properties(chess PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
-#set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+set_target_properties(chess PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
 
 #set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 
-#find_package(NanoSVG REQUIRED)
-#target_link_libraries(chess PRIVATE NanoSVG::nanosvg NanoSVG::nanosvgrast)
+find_package(NanoSVG REQUIRED)
+target_link_libraries(chess PRIVATE NanoSVG::nanosvg NanoSVG::nanosvgrast)
 
 #Include SFML
 set(SFML_STATIC_LIBRARIES TRUE)

@@ -1,16 +1,19 @@
 #include <SFML/Graphics.hpp>
 #include <Windows.h>
 
-#define NANOSVG_IMPLEMENTATION
-#define NANOSVGRAST_IMPLEMENTATION
+//#define NANOSVG_IMPLEMENTATION
+//#define NANOSVGRAST_IMPLEMENTATION
 
 #include "headers/event_handler.hpp"
 #include "headers/draw_board.hpp"
 
-//int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nCmdShow)
-int main()
+ #ifdef NDEBUG
+    int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nCmdShow)
+ #else
+    int main()
+ #endif
 {
-    sf::RenderWindow window(sf::VideoMode(800, 800), "SFML works!");
+    sf::RenderWindow window(sf::VideoMode(1280, 1280), "SFML works!");
     window.setFramerateLimit(60.0f);
 
     Board* board;
