@@ -2,8 +2,8 @@ add_executable(chess
     main.cpp
     src/draw_board.cpp
     src/event_handler.cpp)
-set_target_properties(chess PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
-set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+#set_target_properties(chess PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+#set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
 
 #set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
@@ -29,3 +29,7 @@ endif()
 target_compile_features(chess PRIVATE cxx_std_20)
 target_compile_definitions(chess PRIVATE SFML_DYNAMIC)
 target_link_libraries(chess PRIVATE sfml-window sfml-graphics)
+
+#Move generation library
+target_link_libraries(chess PRIVATE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/MoveGeneration.lib")
+target_include_directories(chess PRIVATE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/include")

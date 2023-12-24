@@ -4,19 +4,23 @@
 typedef unsigned char bpos;
 typedef unsigned long long bitboard;
 
-enum Piece
-{
-    NONE = 0, // reserved for capture data
-    B_KING, W_KING,
-    B_QUEEN, W_QUEEN,
-    B_ROOK, W_ROOK,
-    B_BISHOP, W_BISHOP,
-    B_KNIGHT, W_KNIGHT,
-    B_PAWN, W_PAWN
-};
+#include <cstdint>
+#include <iostream>
+#include <vector>
 
 namespace movgen
 {
+    enum class Piece
+    {
+        NONE = 0, // reserved for capture data
+        B_KING, W_KING,
+        B_QUEEN, W_QUEEN,
+        B_ROOK, W_ROOK,
+        B_BISHOP, W_BISHOP,
+        B_KNIGHT, W_KNIGHT,
+        B_PAWN, W_PAWN
+    };
+
     struct Move
     {
         Piece piece;
@@ -54,7 +58,7 @@ namespace movgen
         /// @param double_move if a pawn moved two squares forward
         /// @param castling see Move.move_data comment
         Move(Piece piece, bpos from, bpos to,
-            unsigned char capturen = 0, unsigned char promotion = 0,
+            unsigned char capture = 0, unsigned char promotion = 0,
             bool double_move = 0, unsigned char castling = 0);
     };
 

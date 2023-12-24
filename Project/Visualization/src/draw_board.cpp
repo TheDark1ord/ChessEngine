@@ -1,6 +1,7 @@
 #include "../headers/draw_board.hpp"
 
-Board::Board(sf::Vector2u window_size)
+Board::Board(sf::Vector2u window_size, bool flipped)
+    :flipped(flipped)
 {
     this->window_size = window_size;
     label_font.loadFromFile("../data/arial.ttf");
@@ -10,6 +11,9 @@ Board::Board(sf::Vector2u window_size)
     squares.create(64 * 4);
 
     this->resize(window_size);
+
+    w_pawn_texture = this->parse_svg_file("../data/w_pn.svg");
+    b_pawn_texture = this->parse_svg_file("../data/b_pn.svg");
 
     w_knight_texture = this->parse_svg_file("../data/w_kn.svg");
     b_knight_texture = this->parse_svg_file("../data/b_kn.svg");
@@ -39,7 +43,7 @@ void Board::resize(sf::Vector2u new_window_size)
     place_squares();
 }
 
-void Board::draw_board(sf::RenderWindow* window)
+void Board::draw_board(sf::RenderWindow* window, movgen::BoardPosition* pos)
 {
     window->draw(squares);
     window->draw(char_label);
@@ -47,11 +51,7 @@ void Board::draw_board(sf::RenderWindow* window)
     window->draw(inner);
     window->draw(outer);
 
-    sf::RectangleShape knight;
-    knight.setSize({ cell_size, cell_size });
-    knight.setTexture(&w_knight_texture);
-    knight.setPosition(this->board_offset, this->board_offset);
-    window->draw(knight);
+    this->draw_pieces(window, pos);
 }
 
 sf::Vector2f Board::screen_to_board(sf::Vector2f screen_pos)
@@ -64,8 +64,12 @@ sf::Vector2f Board::screen_to_board(sf::Vector2f screen_pos)
 sf::Vector2f Board::board_to_screen(sf::Vector2f board_pos)
 {
     //TODO: finish this
-    throw std::logic_error("Not implemented");
-    return sf::Vector2f();
+    sf::Vector2f ret_vec;
+
+    ret_vec.x = board_pos.x + board_offset;
+    ret_vec.y = board_pos.y + board_offset;
+
+    return ret_vec;
 }
 
 void Board::place_border()
@@ -120,8 +124,16 @@ void Board::place_labels()
         });
     number_label.setRotation(270);
 
-    char_label.setString("abcdefgh");
-    number_label.setString("12345678");
+    if (!flipped)
+    {
+        char_label.setString("abcdefgh");
+        number_label.setString("12345678");
+    }
+    else
+    {
+        char_label.setString("hgfedcba");
+        number_label.setString("87654321");
+    }
 }
 
 void Board::place_squares()
@@ -157,6 +169,72 @@ void Board::place_squares()
         squares[i * 4 + 3].color = cur_col;
     }
     this->squares.update(squares);
+}
+
+void Board::draw_pieces(sf::RenderWindow* window, movgen::BoardPosition* pos)
+{
+    movgen::Piece cur_piece;
+    sf::RectangleShape piece;
+    piece.setSize({ cell_size, cell_size });
+
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            movgen::Piece cur_piece = movgen::get_piece(*pos, i * 8 + j);
+
+            if (static_cast<int>(cur_piece) != 0)
+            {
+                sf::Texture* cur_texture = get_piece_texture(cur_piece);
+
+                piece.setTexture(cur_texture);
+
+                if (!flipped)
+                {
+                    piece.setPosition(this->board_to_screen({ (7 - j) * cell_size, (7 - i) * cell_size }));
+                }
+                else
+                {
+                    piece.setPosition(this->board_to_screen({ j * cell_size, i * cell_size }));
+                }
+                //knight.setFillColor(sf::Color(0, 0, 0, 125));
+                window->draw(piece);
+            }
+        }
+    }
+}
+
+sf::Texture* Board::get_piece_texture(movgen::Piece piece)
+{
+    switch (piece)
+    {
+    case movgen::Piece::B_KING:
+        return &b_king_texture;
+    case movgen::Piece::W_KING:
+        return &w_king_texture;
+    case movgen::Piece::B_QUEEN:
+        return &b_queen_texture;
+    case movgen::Piece::W_QUEEN:
+        return &w_queen_texture;
+    case movgen::Piece::B_ROOK:
+        return &b_rook_texture;
+    case movgen::Piece::W_ROOK:
+        return &w_rook_texture;
+    case movgen::Piece::B_BISHOP:
+        return &b_bishop_texture;
+    case movgen::Piece::W_BISHOP:
+        return &w_bishop_texture;
+    case movgen::Piece::B_KNIGHT:
+        return &b_knight_texture;
+    case movgen::Piece::W_KNIGHT:
+        return &w_knight_texture;
+    case movgen::Piece::B_PAWN:
+        return &b_pawn_texture;
+    case movgen::Piece::W_PAWN:
+        return &w_pawn_texture;
+    }
+
+    return nullptr;
 }
 
 sf::Texture Board::parse_svg_file(const char* filename)

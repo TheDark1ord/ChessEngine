@@ -3,7 +3,7 @@
 
 #include <random>
 #include <algorithm>
-#include "Types.h"
+#include "MovgenTypes.h"
 
 
 namespace movgen

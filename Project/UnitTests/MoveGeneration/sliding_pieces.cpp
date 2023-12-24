@@ -1,7 +1,7 @@
 #include <iostream>
 #include "MoveGeneration.h"
 #include "MagicNumbers.h"
-#include "Types.h"
+#include "MovgenTypes.h"
 
 int main(int argc, char* argv[])
 {

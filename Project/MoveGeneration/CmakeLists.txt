@@ -1,5 +1,5 @@
 add_library(MoveGeneration STATIC
-    src/MoveGeneration.cpp src/MagicNumbers.cpp)
+    src/MoveGeneration.cpp src/MagicNumbers.cpp src/MovgenTypes.cpp)
 
 set_target_properties(MoveGeneration PROPERTIES PUBLIC_HEADER
     "./include/MagicNumbers.h;./include/MoveGeneration.h;./include/Types.h")
@@ -7,6 +7,15 @@ install(TARGETS MoveGeneration
     LIBRARY DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
     PUBLIC_HEADER DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/include"
 )
+
+file(GLOB LIB_HEADERS include/*.h)
+foreach (HeaderFile IN LISTS LIB_HEADERS)
+add_custom_command(TARGET MoveGeneration POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+        "${HeaderFile}"
+        "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/include/"
+    COMMENT "Copying ${HeaderFile} to include\n")
+endforeach()
 
 set_target_properties(MoveGeneration PROPERTIES LINKER_LANGUAGE CXX)
 

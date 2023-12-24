@@ -7,9 +7,12 @@
 #include <math.h>
 #include <filesystem>
 #include <iostream>
+#include <regex>
 
 #include "nanosvg.h"
 #include "nanosvgrast.h"
+
+#include "MovgenTypes.h"
 
 #define board_green sf::Color(118, 150, 86)
 #define board_pale sf::Color(238, 238, 210)
@@ -29,10 +32,10 @@ inline float map_range(float input, float in_start, float in_end,
 class Board
 {
 public:
-    Board(sf::Vector2u window_size);
+    Board(sf::Vector2u window_size, bool flipped = false);
 
     void resize(sf::Vector2u new_window_size);
-    void draw_board(sf::RenderWindow* window);
+    void draw_board(sf::RenderWindow* window, movgen::BoardPosition* pos);
 
     sf::Vector2f screen_to_board(sf::Vector2f screen_pos);
     sf::Vector2f board_to_screen(sf::Vector2f board_pos);
@@ -57,7 +60,8 @@ private:
     sf::VertexBuffer squares;
 
     //TODO: add bitboard struct reference
-    void draw_pieces(sf::RenderWindow* window);
+    void draw_pieces(sf::RenderWindow* window, movgen::BoardPosition* pos);
+    sf::Texture* get_piece_texture(movgen::Piece piece);
 
     sf::Texture parse_svg_file(const char* filename);
 
@@ -65,10 +69,14 @@ private:
     float board_size;
     float board_offset;
     float cell_size;
+    bool flipped;
 
     // If the window has not 1:1 ratio, then this variable hold the offset
     // to center all the drawings
     sf::Vector2f window_offset;
+
+    sf::Texture w_pawn_texture;
+    sf::Texture b_pawn_texture;
 
     sf::Texture w_knight_texture;
     sf::Texture b_knight_texture;

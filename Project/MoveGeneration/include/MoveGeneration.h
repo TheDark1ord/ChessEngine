@@ -7,7 +7,7 @@
 #include <exception>
 #include <map>
 
-#include "Types.h"
+#include "MovgenTypes.h"
 #include "MagicNumbers.h"
 
 namespace movgen
@@ -34,14 +34,17 @@ namespace movgen
         std::vector<Move> moves;
     };
 
-    const char* fen_regex_string = "^"
-        "(? <PiecePlacement>((? <RankItem>[pnbrqkPNBRQK1 - 8] {1, 8})\\ / ? ) { 8 })\\s +"
-        "(? <SideToMove>b | w)\\s +"
-        "(? <Castling>-| K ? Q ? k ? q)\\s +"
-        "(? <EnPassant>-| [a - h][3 - 6])\\s +"
-        "(? <HalfMoveClock>\\d + )\\s +"
-        "(? <FullMoveNumber>\\d + )\\s *"
-        "$";
+    // inline const char* fen_regex_string = "^"
+    //     "(? <PiecePlacement>((? <RankItem>[pnbrqkPNBRQK1 - 8] {1, 8})\\ / ? ) { 8 })\\s +"
+    //     "(? <SideToMove>b | w)\\s +"
+    //     "(? <Castling>-| K ? Q ? k ? q)\\s +"
+    //     "(? <EnPassant>-| [a - h][3 - 6])\\s +"
+    //     "(? <HalfMoveClock>\\d + )\\s +"
+    //     "(? <FullMoveNumber>\\d + )\\s *"
+    //     "$";
+
+    inline const char* fen_regex_string = "\\s*^(((?:[rnbqkpRNBQKP1-8]+\\/){7})[rnbqkpRNBQKP1-8]+)"
+        "\\s([b|w])\\s([K|Q|k|q]{1,4})\\s(-|[a-h][1-8])\\s(\\d+\\s\\d+)$";
 
     BoardPosition board_from_fen(std::string fen);
     std::string board_to_fen(BoardPosition& pos);

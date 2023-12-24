@@ -29,7 +29,7 @@ inline std::vector<bpos> movgen::bitscan(bitboard board)
     return set_bits;
 }
 
-Piece movgen::get_piece(BoardPosition& b_pos, bpos pos, unsigned char color)
+movgen::Piece movgen::get_piece(BoardPosition& b_pos, bpos pos, unsigned char color)
 {
     bitboard mask = 1ull << pos;
     Piece return_piece = static_cast<Piece>(0);
@@ -76,7 +76,7 @@ size_t movgen::BoardHash::operator()(BoardHash const& h) const
 
 movgen::BoardPosition movgen::board_from_fen(std::string fen)
 {
-    static std::regex fen_regex(movgen::fen_regex_string, std::regex_constants::ECMAScript);
+    static std::regex fen_regex(movgen::fen_regex_string);
     if (!std::regex_match(fen, fen_regex))
     {
         throw std::runtime_error("Invalid fen string");
@@ -88,10 +88,10 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen)
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             if (isdigit(fen[it])) {
-                j += static_cast<int>(fen[it]);
+                j += static_cast<int>(fen[it] - '0');
                 it++;
 
-                if (j >= 8)
+                if (j > 8)
                     throw std::runtime_error("Invalid fen");
 
                 continue;
@@ -136,9 +136,13 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen)
                 set_bit(&return_pos.b_kings, 63 - (i * 8 + j));
                 break;
 
-
+            // This is forward slash(/) this shid does not work with char def
             case '/':
-                throw std::runtime_error("Invalid fen");
+                if (j != 0) {
+                    throw std::runtime_error("Invalid fen(while parsing piece information)");
+                }
+                j--;
+                break;
             }
             it++;
         }
@@ -148,8 +152,8 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen)
     // set to 1
     bitboard top_and_bottom = 18374686479671623935ull;
     // Test that no pawns are on the first and last rows
-    if (return_pos.w_pawns | top_and_bottom ||
-        return_pos.b_pawns | top_and_bottom)
+    if (return_pos.w_pawns & top_and_bottom ||
+        return_pos.b_pawns & top_and_bottom)
     {
         throw std::runtime_error("Invalid fen");
     }
@@ -206,7 +210,8 @@ EnPassant:
         return_pos.en_passant = (fen[it] - 'a') + (fen[++it] - '1') * 8;
     }
     // Test that en passant square is on 3rd or 6th row
-    if ((1ull << return_pos.en_passant) | 18446463698227757055ull)
+    // TODO: possible bug here(maybe should sub 1 from return_pos.en_passant)
+    if ((1ull << return_pos.en_passant) & 18446463698227757054ull)
     {
         throw std::runtime_error("Invalid fen");
     }
@@ -278,9 +283,9 @@ void movgen::generatePawnMoves(movgen::BoardPosition& board, movgen::GeneratedMo
     single_pawn_moves = (board.w_pawns << 8) & ~(board.w_pieces);
     // Convert to move array
     for (auto move : movgen::bitscan(single_pawn_moves & ~top_edge))
-        moves->moves.push_back(Move(W_PAWN, move - 8, move));
+        moves->moves.push_back(movgen::Move(Piece::W_PAWN, move - 8, move));
     for (auto move : movgen::bitscan(single_pawn_moves& top_edge))
-        moves->moves.push_back(Move(W_PAWN, move - 8, move, 0, 5));
+        moves->moves.push_back(movgen::Move(Piece::W_PAWN, move - 8, move, 0, 5));
 
     // Generate pawn attacks
     left_pawn_attacks = ((board.w_pawns & ~left_edge) << 9);
@@ -293,18 +298,18 @@ void movgen::generatePawnMoves(movgen::BoardPosition& board, movgen::GeneratedMo
     right_pawn_captures = right_pawn_attacks & (board.b_pieces | (1ull << board.en_passant) * (board.en_passant != -1));
 
     for (auto move : movgen::bitscan(left_pawn_captures & ~top_edge))
-        moves->moves.push_back(Move(W_PAWN, move - 9, move, get_piece(board, move, 2)));
-    for (auto move : movgen::bitscan(right_pawn_captures & top_edge))
-        moves->moves.push_back(Move(W_PAWN, move - 7, move, get_piece(board, move, 2), 5));
+        moves->moves.push_back(movgen::Move(Piece::W_PAWN, move - 9, move, (int)get_piece(board, move, 2)));
+    for (auto move : movgen::bitscan(right_pawn_captures& top_edge))
+        moves->moves.push_back(movgen::Move(Piece::W_PAWN, move - 7, move, (int)get_piece(board, move, 2), 5));
 
     /// All the same, but for black pawns
 
     single_pawn_moves = (board.w_pawns >> 8) & ~(board.b_pieces);
     // Convert to move array
     for (auto move : movgen::bitscan(single_pawn_moves & ~bottom_edge))
-        moves->moves.push_back(Move(B_PAWN, move + 8, move));
+        moves->moves.push_back(movgen::Move(Piece::B_PAWN, move + 8, move));
     for (auto move : movgen::bitscan(single_pawn_moves& bottom_edge))
-        moves->moves.push_back(Move(B_PAWN, move + 8, move, 0, 5));
+        moves->moves.push_back(movgen::Move(Piece::B_PAWN, move + 8, move, 0, 5));
 
     // Generate pawn attacks
     left_pawn_attacks = ((board.b_pawns & ~left_edge) >> 7);
@@ -317,7 +322,7 @@ void movgen::generatePawnMoves(movgen::BoardPosition& board, movgen::GeneratedMo
     right_pawn_captures = right_pawn_attacks & (board.b_pieces | (1ull << board.en_passant) * (board.en_passant != -1));
 
     for (auto move : movgen::bitscan(left_pawn_captures & ~bottom_edge))
-        moves->moves.push_back(Move(B_PAWN, move + 7, move, get_piece(board, move, 1)));
-    for (auto move : movgen::bitscan(right_pawn_captures & bottom_edge))
-        moves->moves.push_back(Move(B_PAWN, move + 9, move, get_piece(board, move, 1), 5));
+        moves->moves.push_back(movgen::Move(Piece::B_PAWN, move + 7, move, (int)get_piece(board, move, 1)));
+    for (auto move : movgen::bitscan(right_pawn_captures& bottom_edge))
+        moves->moves.push_back(movgen::Move(Piece::B_PAWN, move + 9, move, (int)get_piece(board, move, 1), 5));
 }
