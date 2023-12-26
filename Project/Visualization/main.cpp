@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <Windows.h>
 
+#include <cstring>
 //#define NANOSVG_IMPLEMENTATION
 //#define NANOSVGRAST_IMPLEMENTATION
 
@@ -14,16 +15,14 @@
 /// @brief Catch and process all thrown exceptions, that bubble past main
 void terminate_func();
 
-#ifdef NDEBUG
 int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nCmdShow)
-#else
-int main()
-#endif
 {
 #ifndef NDEBUG
-    /* code */
-    HWND hWnd = GetConsoleWindow();
-    ShowWindow(hWnd, SW_HIDE);
+    // Show console in debug mode
+    AllocConsole();
+    freopen("conin$", "r", stdin);
+    freopen("conout$", "w", stdout);
+    freopen("conout$", "w", stderr);
 #endif //DEBUG
 
 

@@ -1,9 +1,12 @@
+
 add_executable(chess
+    WIN32
     main.cpp
     src/draw_board.cpp
     src/event_handler.cpp)
-set_target_properties(chess PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
-set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+
+#set_target_properties(chess PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+#set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
 
 #Create a symlink in app directory for easier access
 # add_custom_command(TARGET chess POST_BUILD
@@ -13,27 +16,17 @@ set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
 #     COMMENT "Creating symbolic link to chess.exe"
 # )
 
-find_package(NanoSVG CONFIG REQUIRED)
+find_package(NanoSVG 1.0 CONFIG REQUIRED)
 target_link_libraries(chess PRIVATE NanoSVG::nanosvg NanoSVG::nanosvgrast)
 
 #Include SFML
 set(SFML_STATIC_LIBRARIES TRUE)
-if (CMAKE_BUILD_TYPE STREQUAL "DEBUG")
-    find_package(SFML 2.6.0
-        COMPONENTS
-            system-d window-d graphics-d audio-d
-        CONFIG
-        REQUIRED
-    )
-    install(FILES $<TARGET_PDB_FILE:${chess}> DESTINATION bin OPTIONAL)
-else()
-    find_package(SFML 2.6.0
+find_package(SFML 2.6.0
         COMPONENTS
             system window graphics audio
         CONFIG
         REQUIRED
     )
-endif()
 
 target_compile_features(chess PRIVATE cxx_std_20)
 target_compile_definitions(chess PRIVATE SFML_DYNAMIC)
