@@ -2,8 +2,16 @@ add_executable(chess
     main.cpp
     src/draw_board.cpp
     src/event_handler.cpp)
-#set_target_properties(chess PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
-#set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+set_target_properties(chess PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+
+#Create a symlink in app directory for easier access
+# add_custom_command(TARGET chess POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E create_symlink
+#     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/chess.exe
+#     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../chess.exe
+#     COMMENT "Creating symbolic link to chess.exe"
+# )
 
 #set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")

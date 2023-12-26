@@ -11,6 +11,9 @@
 #include "MovgenTypes.h"
 #include "MagicNumbers.h"
 
+/// @brief Catch and process all thrown exceptions, that bubble past main
+void terminate_func();
+
 #ifdef NDEBUG
 int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nCmdShow)
 #else
@@ -32,23 +35,12 @@ int main()
     window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 
     movgen::BoardPosition position;
-    try {
-        position = movgen::board_from_fen(
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-        );
-    }
-    catch (std::exception& e) {
-        std::cout << "Runtime exception while parsing fen string:\n";
-        std::cout << e.what();
-    }
 
-    Board* board;
-    try {
-        board = new Board(window.getSize());
-    }
-    catch (std::exception& e) {
-        MessageBox(NULL, e.what(), "Error", MB_OK);
-    }
+    position = movgen::board_from_fen(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    );
+
+    board = new Board(window.getSize());
 
     while (window.isOpen())
     {
@@ -66,4 +58,26 @@ int main()
     }
 
     return 0;
+}
+
+void terminate_func()
+{
+    std::cerr << "terminate called after throwing an instance of ";
+    try
+    {
+        std::rethrow_exception(std::current_exception());
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << typeid(ex).name() << std::endl;
+        std::cerr << "  what(): " << ex.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::cerr << typeid(std::current_exception()).name() << std::endl;
+        std::cerr << " ...something, not an exception, dunno what." << std::endl;
+    }
+    MessageBox(NULL, "Failed due to an exception", "Error", MB_OK);
+    std::cerr << "errno: " << errno << ": " << std::strerror(errno) << std::endl;
+    std::abort();
 }

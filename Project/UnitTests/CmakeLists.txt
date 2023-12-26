@@ -3,6 +3,12 @@ set(MOVE_GENERATION_SOURCE_DIR "${PROJECT_SOURCE_DIR}/Project/MoveGeneration")
 include_directories("${MOVE_GENERATION_SOURCE_DIR}/include")
 
 add_executable(SlidingPiecesTest "./MoveGeneration/sliding_pieces.cpp")
+
 target_link_libraries(SlidingPiecesTest PRIVATE MoveGeneration)
 
-add_test(NAME SlidingPiecesTest COMMAND SlidingPiecesTest)
+set_target_properties( SlidingPiecesTest
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/../app/bin/tests"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/../app/bin/tests"
+)
+add_test(NAME movgen.sliding_pieces COMMAND SlidingPiecesTest)
