@@ -5,7 +5,6 @@
 #include <algorithm>
 #include "MovgenTypes.h"
 
-
 namespace movgen
 {
     struct Magic
@@ -24,11 +23,11 @@ namespace movgen
     };
 
     /// @brief returns relevant moveset from previously generated moves
-    /// @param pos positions of all the pieces on the board
+    /// @param blocker positions of all the pieces on the board
     /// @param square position of the bishop
-    /// @return bishop moves
-    bitboard get_bishops_attacks(bitboard blocker, bpos square, GeneratedMagics* gen_m);
-    /// @brief see movgen::get_bishops_attacks
+    /// @return gen_m - bishop moves
+    bitboard get_bishop_attacks(bitboard blocker, bpos square, GeneratedMagics* gen_m);
+    /// @brief see movgen::get_bishop_attacks
     bitboard get_rook_attacks(bitboard blocker, bpos square, GeneratedMagics* gen_m);
 
     // Get index in attacks array for given arguments
@@ -57,7 +56,7 @@ namespace movgen
     /// @brief generates mask for magic numbers(does not inlude border bits)
     bitboard _generate_bishop_mask(bpos sq);
     /// @brief Generates bishop moves for a given square,
-    /// unlike get_bishops_attacks, it generates them from scratch
+    /// unlike get_bishop_attacks, it generates them from scratch
     /// @param sq square, bishop position
     /// @param blocker positions of all the pieces on the board
     /// @return bishop moves bitboard(includes blocked squares)

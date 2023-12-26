@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
             bpos bishop_pos = static_cast<bpos>(movgen::_random_uint64() % 64);
 
             bitboard expected = movgen::_generate_bishop_moves(blocker_mask, bishop_pos);
-            if (expected != movgen::get_bishops_attacks(blocker_mask, bishop_pos, magics))
+            if (expected != movgen::get_bishop_attacks(blocker_mask, bishop_pos, magics))
                 return -1;
         }
 

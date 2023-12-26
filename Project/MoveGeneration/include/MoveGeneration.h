@@ -34,6 +34,19 @@ namespace movgen
         std::vector<Move> moves;
     };
 
+    /// @brief Contains all of the cach, generated or loaded from a file
+    /// at the start of the programm, that is used as a lookup for move generation
+    struct MoveCache
+    {
+        GeneratedMagics* magics;
+
+        // Should be very easy to generate(it is)
+        bitboard knight_cache[64];
+        bitboard king_cache[64];
+    };
+
+    void generate_move_cache(MoveCache* out);
+
     // inline const char* fen_regex_string = "^"
     //     "(? <PiecePlacement>((? <RankItem>[pnbrqkPNBRQK1 - 8] {1, 8})\\ / ? ) { 8 })\\s +"
     //     "(? <SideToMove>b | w)\\s +"
@@ -57,11 +70,11 @@ namespace movgen
     // and keep the rest intact
     // These functions generate pseudo legal moves for a given position
     // Generated moves is expected to be empty
-    void generateKingMoves(BoardPosition& board, GeneratedMoves* moves);
+    void generateKingMoves(BoardPosition& board, GeneratedMoves* moves, MoveCache* cache);
     void generateQueenMoves(BoardPosition& board, GeneratedMoves* moves, GeneratedMagics* magics);
     void generateRookMoves(BoardPosition& board, GeneratedMoves* moves, GeneratedMagics* magics);
     void generateBishopMoves(BoardPosition& board, GeneratedMoves* moves, GeneratedMagics* magics);
-    void generateKnightMoves(BoardPosition& board, GeneratedMoves* moves);
+    void generateKnightMoves(BoardPosition& board, GeneratedMoves* moves, MoveCache* cache);
     void generatePawnMoves(BoardPosition& board, GeneratedMoves* moves);
 }
 

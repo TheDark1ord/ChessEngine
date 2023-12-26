@@ -1,6 +1,6 @@
 #include "../include/MagicNumbers.h"
 
-bitboard movgen::get_bishops_attacks(bitboard blocker, bpos square, movgen::GeneratedMagics* gen_m)
+bitboard movgen::get_bishop_attacks(bitboard blocker, bpos square, movgen::GeneratedMagics* gen_m)
 {
     uint64_t index = blocker & gen_m->bishop_magics[square].mask;
     index *= gen_m->bishop_magics[square].magic;
