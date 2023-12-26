@@ -1,6 +1,6 @@
 #include "../include/MovgenTypes.h"
 
-inline std::vector<bpos> movgen::bitscan(bitboard board)
+std::vector<bpos> movgen::bitscan(bitboard board)
 {
     // https://www.chessprogramming.org/BitScan#Bitscan_by_Modulo
     static constexpr int lookup67[68] = {

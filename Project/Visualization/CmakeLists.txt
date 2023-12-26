@@ -13,30 +13,31 @@ set_target_properties(chess PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
 #     COMMENT "Creating symbolic link to chess.exe"
 # )
 
-#set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
-include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
-
-find_package(NanoSVG REQUIRED)
+find_package(NanoSVG CONFIG REQUIRED)
 target_link_libraries(chess PRIVATE NanoSVG::nanosvg NanoSVG::nanosvgrast)
 
 #Include SFML
 set(SFML_STATIC_LIBRARIES TRUE)
 if (CMAKE_BUILD_TYPE STREQUAL "DEBUG")
-    find_package(SFML 2.6
+    find_package(SFML 2.6.0
         COMPONENTS
-            system-d window-d graphics-d audio-d REQUIRED
+            system-d window-d graphics-d audio-d
+        CONFIG
+        REQUIRED
     )
     install(FILES $<TARGET_PDB_FILE:${chess}> DESTINATION bin OPTIONAL)
 else()
-    find_package(SFML 2.6
+    find_package(SFML 2.6.0
         COMPONENTS
-            system window graphics audio REQUIRED
+            system window graphics audio
+        CONFIG
+        REQUIRED
     )
 endif()
 
 target_compile_features(chess PRIVATE cxx_std_20)
 target_compile_definitions(chess PRIVATE SFML_DYNAMIC)
-target_link_libraries(chess PRIVATE sfml-window sfml-graphics)
+target_link_libraries(chess PRIVATE sfml-window sfml-graphics sfml-system)
 
 #Move generation library
 target_link_libraries(chess PRIVATE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/MoveGeneration.lib")

@@ -62,6 +62,10 @@ namespace movgen
     BoardPosition board_from_fen(std::string fen);
     std::string board_to_fen(BoardPosition& pos);
 
+    /// This is good, but why do I need this?
+    /// TODO: do not forget to add this to make_move function
+    /// ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+    /// ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
     // Second argument is the set for all positions reached within that game
     // Used to check for repetition; if null, check is not performed
     GeneratedMoves generateMoves(BoardPosition& pos, std::set<size_t>* hashed_pos = nullptr);

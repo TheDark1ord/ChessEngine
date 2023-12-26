@@ -1,5 +1,4 @@
 app/bin/*
-!app/bin/*.dll
 
 build/
 lib/
@@ -8,3 +7,5 @@ lib/
 .vs/
 
 out/
+
+vcpkg_installed/

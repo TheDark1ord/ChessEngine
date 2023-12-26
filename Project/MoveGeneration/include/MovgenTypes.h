@@ -115,7 +115,7 @@ namespace movgen
 
     /// @brief converts a bitboard into a sequense of values between 0 and 63, that
     /// correspond to positions of set bits in the bitboard
-    inline std::vector<bpos> bitscan(bitboard board);
+    std::vector<bpos> bitscan(bitboard board);
 
     /// @brief scans all of the bitboards on the given board and return the bitboard for
     /// which there is a bit set in a given position

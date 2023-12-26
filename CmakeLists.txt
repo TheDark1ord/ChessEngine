@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.23.0)
 
+#include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+#set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+set(CMAKE_TOOLCHAIN_FILE "C:\\Users\\rubco\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #sset(CMAKE_GENERATOR_PLATFORM win64)
@@ -21,11 +25,6 @@ foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
     set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} )
     set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} )
 endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
-
-#----Link libraries here----
-set(LIB_FOLDER_PATH "C:/Programming/C++/Libraries")
-set(SFML_DIR "${LIB_FOLDER_PATH}/SFML-2.6.0/")
-set(CMAKE_PREFIX_PATH "${SFML_DIR}/lib/cmake/SFML/")
 
 project(chess-engine VERSION 0.1 LANGUAGES CXX)
 
