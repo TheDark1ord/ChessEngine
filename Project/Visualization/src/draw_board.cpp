@@ -54,11 +54,49 @@ void Board::draw_board(sf::RenderWindow* window, movgen::BoardPosition* pos)
     this->draw_pieces(window, pos);
 }
 
+void Board::flip_board()
+{
+    this->flipped = !this->flipped;
+    this->place_labels();
+}
+
+void Board::select_square(int x_pos, int y_pos)
+{
+#ifndef NDEBUG
+    // Check input
+    if (x_pos > 8 || x_pos < 0 || y_pos > 8 || y_pos < 0)
+        throw std::runtime_error("Bad position argument in Board::select_square");
+#endif ///*define*/
+
+    int new_select = y_pos * 8 + x_pos;
+    if (new_select == this->selected_square)
+    {
+        this->selected_square = -1;
+    }
+    else
+    {
+        this->selected_square = new_select;
+    }
+
+    this->place_squares();
+}
+
+int Board::get_selected_square()
+{
+    return this->selected_square;
+}
+
 sf::Vector2f Board::screen_to_board(sf::Vector2f screen_pos)
 {
     //TODO: finish this
-    throw std::logic_error("Not implemented");
-    return sf::Vector2f();
+    sf::Vector2f ret_vec;
+
+    float scale = inner_board_scale * board_scale;
+
+    ret_vec.x = (screen_pos.x - board_offset);
+    ret_vec.y = (screen_pos.y - board_offset);
+
+    return ret_vec;
 }
 
 sf::Vector2f Board::board_to_screen(sf::Vector2f board_pos)
@@ -70,6 +108,11 @@ sf::Vector2f Board::board_to_screen(sf::Vector2f board_pos)
     ret_vec.y = board_pos.y + board_offset;
 
     return ret_vec;
+}
+
+float Board::get_cell_size()
+{
+    return this->cell_size;
 }
 
 void Board::place_border()
@@ -100,6 +143,7 @@ void Board::place_border()
 
 void Board::place_labels()
 {
+    // Set label size to half of distance between borders
     static float label_size = (board_size * (1 - inner_board_scale)) * 0.5f;
     //static float label_size = 46;
 
@@ -124,7 +168,7 @@ void Board::place_labels()
         });
     number_label.setRotation(270);
 
-    if (!flipped)
+    if (!this->flipped)
     {
         char_label.setString("abcdefgh");
         number_label.setString("12345678");
@@ -162,6 +206,13 @@ void Board::place_squares()
         cur_col = (i % 2) ^ (i % 16 >= 8) ?
             board_green :
             board_pale;
+
+        if (i == this->selected_square)
+        {
+            cur_col = (i % 2) ^ (i % 16 >= 8) ?
+                selected_dark :
+                selected_light;
+        }
 
         squares[i * 4 + 0].color = cur_col;
         squares[i * 4 + 1].color = cur_col;
