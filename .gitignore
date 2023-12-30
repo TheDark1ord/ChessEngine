@@ -3,9 +3,8 @@ app/bin/*
 build/
 lib/
 
-.vscode/
-.vs/
-.cache
+.*
+tags
 
 out/
 

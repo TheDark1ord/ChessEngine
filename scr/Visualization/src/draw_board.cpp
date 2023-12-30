@@ -283,6 +283,8 @@ sf::Texture* Board::get_piece_texture(movgen::Piece piece)
         return &b_pawn_texture;
     case movgen::Piece::W_PAWN:
         return &w_pawn_texture;
+    default:
+        return nullptr;
     }
 
     return nullptr;
