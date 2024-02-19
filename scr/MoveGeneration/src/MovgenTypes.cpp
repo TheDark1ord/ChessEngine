@@ -56,6 +56,45 @@ movgen::Piece movgen::get_piece(BoardPosition& b_pos, bpos pos, unsigned char co
     return return_piece;
 }
 
+bitboard* movgen::get_bitboard_for_piece(BoardPosition& b_pos, Piece piece)
+{
+    switch (piece)
+    {
+    case Piece::W_KING:
+        return &b_pos.w_kings;
+    case Piece::B_KING:
+        return &b_pos.b_kings;
+
+    case Piece::W_QUEEN:
+        return &b_pos.w_queens;
+    case Piece::B_QUEEN:
+        return &b_pos.b_queens;
+
+    case Piece::W_ROOK:
+        return &b_pos.w_rooks;
+    case Piece::B_ROOK:
+        return &b_pos.b_rooks;
+
+    case Piece::W_BISHOP:
+        return &b_pos.w_bishops;
+    case Piece::B_BISHOP:
+        return &b_pos.b_bishops;
+
+    case Piece::W_KNIGHT:
+        return &b_pos.w_knights;
+    case Piece::B_KNIGHT:
+        return &b_pos.b_knights;
+
+    case Piece::W_PAWN:
+        return &b_pos.w_pawns;
+    case Piece::B_PAWN:
+        return &b_pos.b_pawns;
+
+    default:
+        return nullptr;
+    }
+}
+
 movgen::Move::Move(Piece piece, bpos from, bpos to, unsigned char capture, unsigned char promotion, bool double_move, unsigned char castling)
     :piece(piece), from(from), to(to)
 {
