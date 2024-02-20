@@ -70,6 +70,7 @@ namespace movgen {
     */
     struct BoardPosition {
         bitboard pieces[PIECE_NB];
+        Piece squares[64];
 
         // Determines current side to move
         // 0 - White, 1 - Black

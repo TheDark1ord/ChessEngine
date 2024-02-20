@@ -30,18 +30,8 @@ std::vector<bpos> movgen::bitscan(bitboard board)
 
 movgen::Piece movgen::get_piece(BoardPosition& b_pos, bpos pos, unsigned char color)
 {
-    bitboard mask = 1ull << pos;
-    Piece return_piece = static_cast<Piece>(0);
-
-    if (color != 2)
-    {
-        return_piece = b_pos.w_kings & mask ? Piece::W_KING : return_piece;
-        return_piece = b_pos.w_queens & mask ? Piece::W_QUEEN : return_piece;
-        return_piece = b_pos.w_rooks & mask ? Piece::W_ROOK : return_piece;
-        return_piece = b_pos.w_bishops & mask ? Piece::W_BISHOP : return_piece;
-        return_piece = b_pos.w_knights & mask ? Piece::W_KNIGHT : return_piece;
-        return_piece = b_pos.w_pawns & mask ? Piece::W_PAWN : return_piece;
-    }
+    return b_pos.squares[pos];
+}
 
     if (color != 1)
     {

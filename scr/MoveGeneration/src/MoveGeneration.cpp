@@ -69,40 +69,52 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen) {
 
             switch (fen[it]) {
             case 'P':
-                set_bit(&return_pos.w_pawns, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[W_PAWN], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = W_PAWN;
                 break;
             case 'p':
-                set_bit(&return_pos.b_pawns, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[B_PAWN], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = B_PAWN;
                 break;
             case 'N':
-                set_bit(&return_pos.w_knights, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[W_KNIGHT], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = W_KNIGHT;
                 break;
             case 'n':
-                set_bit(&return_pos.b_knights, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[B_KNIGHT], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = B_KNIGHT;
                 break;
             case 'B':
-                set_bit(&return_pos.w_bishops, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[W_BISHOP], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = W_BISHOP;
                 break;
             case 'b':
-                set_bit(&return_pos.b_bishops, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[B_BISHOP], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = B_BISHOP;
                 break;
             case 'R':
-                set_bit(&return_pos.w_rooks, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[W_ROOK], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = W_ROOK;
                 break;
             case 'r':
-                set_bit(&return_pos.b_rooks, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[B_ROOK], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = B_ROOK;
                 break;
             case 'Q':
-                set_bit(&return_pos.w_queens, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[W_QUEEN], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = W_QUEEN;
                 break;
             case 'q':
-                set_bit(&return_pos.b_queens, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[B_QUEEN], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = B_QUEEN;
                 break;
             case 'K':
-                set_bit(&return_pos.w_kings, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[W_KING], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = W_KING;
                 break;
             case 'k':
-                set_bit(&return_pos.b_kings, 63 - (i * 8 + j));
+                bitb::set_bit(&return_pos.pieces[B_KING], 63 - (i * 8 + j));
+                return_pos.squares[63 - (i * 8 + j)] = B_KING;
                 break;
 
                 // This is forward slash(/) this shid does not work with char def
