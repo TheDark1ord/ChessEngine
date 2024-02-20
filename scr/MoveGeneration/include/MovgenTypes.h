@@ -26,7 +26,7 @@ namespace movgen {
         PIECE_NB = 17
     };
 
-    enum Color { WHITE, BLACK };
+    enum Color { BLACK, WHITE };
 
     enum CastlingRights
     {
@@ -45,6 +45,17 @@ namespace movgen {
         CASTLING_NB
     };
 
+    enum MoveType
+    {
+        NORMAL,
+        CAPTURE,
+        PROMOTION,
+        PROMOTION_CAPTURE,
+        EN_PASSANT,
+        DOUBLE_MOVE,
+        CASTLING
+    };
+
     enum GenType
     {
         ATTACKS,
@@ -54,13 +65,25 @@ namespace movgen {
 
     struct PositionInfo
     {
-        bitboard pinned;
-        bitboard pinners;
+        struct Pin
+        {
+            bpos pinned;
+            bpos pinner;
+            // Represents squares a pinned piece can move to
+            bitboard mask;
+        };
+        std::vector<Pin> pins;
+        bitboard pin_board = 0;
+        // It is only possible to have one en_passant pin
+        bool en_passant_pin = 0;
 
-        bitboard checkers;
+        bitboard checkers = 0;
         // Squares to block check or capture the checker
-        bitboard blockers;
-        unsigned int check_num;
+        bitboard blockers = 0;
+        unsigned int checks_num = 0;
+
+        //Squares attacked by the opposite side
+        bitboard attacked;
     };
 
     /*
@@ -75,7 +98,7 @@ namespace movgen {
 
         // Determines current side to move
         // 0 - White, 1 - Black
-        Color side;
+        Color side_to_move;
         CastlingRights castling;
         bpos en_passant;
         unsigned int halfmove;
@@ -99,35 +122,30 @@ namespace movgen {
         // Stores addition data about the move: piece captured(if any), promotion(if
         // any), etc... Data stored in order from LSb to MSb: Capture(4 bits):
         //      0 -- No capture
-        //      1, 2 -- invalid
-        //      3 to 12 in order: B_QUEEN, W_QUEEN, ROOK, BISHOP, KNIGHT, PAWN
-        //      13 and 14 -- en passant capture (black and white respectively)
+        //      1, 9 -- invalid
+        //      2 to 6 in order: B_QUEEN , B_ROOK, B_BISHOP, B_KNIGHT, B_PAWN
+        //      8 and 9 -- unused
+        //      10 to 14 white pieces in the same order
         //      15 -- unused
         // Promotion(4 bits):
         //      0 -- no promotion
-        //      1 -- queen
-        //      2 -- rook
-        //      3 -- bishop
-        //      4 -- knight
-        //      5 -- any
+        //      1 -- invalid
+        //      2 -- queen
+        //      3 -- rook
+        //      4 -- bishop
+        //      5 -- knight
+        //      6 -- any
         // Double pawn move(1 bit) -- used for faster detection to set the en passant
+        // En passant (1 bit)
         // square Castling(2 bits) -- none, short, long
         //
         // Note: there is no validity check
         uint16_t move_data;
 
-        /// @brief
-        /// Constructs "Move" struct instance, 4 last params used to construct
-        /// Move.move_data parameter
-        /// @param piece
-        /// @param from
-        /// @param to
-        /// @param capture see Move.move_data
-        /// @param promotion see Move.move_data comment
-        /// @param double_move if a pawn moved two squares forward
-        /// @param castling see Move.move_data comment
-        Move(Piece piece, bpos from, bpos to, unsigned char capture = 0,
-            unsigned char promotion = 0, bool double_move = 0,
+        Move(Piece piece, bpos from, bpos to);
+
+        Move(Piece piece, bpos from, bpos to, unsigned char capture,
+            unsigned char promotion = 0, bool double_move = 0, bool en_passant = 0,
             unsigned char castling = 0);
     };
 
@@ -139,11 +157,6 @@ namespace movgen {
     ///     0 - scan all colors, 1 - scan only white, 2 - scan only black
     /// @return piece, which is in given board cell
     Piece get_piece(BoardPosition& b_pos, bpos pos, unsigned char color = 0);
-    /// @brief
-    /// @param b_pos board to get pointer to
-    /// @param piece type of piece
-    /// @return pointer to bitboard for specified piece type and color
-    bitboard* get_bitboard_for_piece(BoardPosition& b_pos, Piece piece);
 
     class BoardHash {
         BoardHash(BoardPosition& pos);

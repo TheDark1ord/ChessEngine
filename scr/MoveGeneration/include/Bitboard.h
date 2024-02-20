@@ -35,7 +35,7 @@ constexpr bitboard sq_bitb(bpos pos) { return 1ull << pos; }
 /// correspond to positions of set bits in the bitboard
 inline std::vector<bpos> bitscan(bitboard board);
 inline bpos pop_lsb(bitboard* board);
-inline unsigned char nonzero_count(bitboard board);
+inline unsigned char bit_count(bitboard board);
 
 constexpr bitboard Rank[8]{
     0x101010101010101ull,
@@ -62,9 +62,12 @@ constexpr bitboard File[8]{
 extern bitboard Line[64][64];
 // A line connecting two squares(includes these squares) (if exists)
 extern bitboard Between[64][64];
+// The same as between, but not including edge squares
+extern bitboard Between_in[64][64];
 
-constexpr bitboard rank_bitb(bpos sq) { return Rank[sq >> 3]; }
-constexpr bitboard file_bitb(bpos sq) { return File[sq & 0b111]; }
+// Get a rank or a file of a given square
+constexpr bitboard sq_rank(bpos sq) { return Rank[sq >> 3]; }
+constexpr bitboard sq_file(bpos sq) { return File[sq & 0b111]; }
 
 template<bitb::Direction D>
 constexpr bitboard shift(bitboard bitb)
