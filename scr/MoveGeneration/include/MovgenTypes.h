@@ -2,6 +2,7 @@
 #define TYPES_H
 
 #include <cstdint>
+#include <string>
 #include <vector>
 #include "Bitboard.h"
 
@@ -82,6 +83,13 @@ namespace movgen {
 
         PositionInfo info;
     };
+
+    inline const char* fen_regex_string =
+        "\\s*^(((?:[rnbqkpRNBQKP1-8]+\\/){7})[rnbqkpRNBQKP1-8]+)"
+        "\\s([b|w])\\s([K|Q|k|q]{1,4})\\s(-|[a-h][1-8])\\s(\\d+\\s\\d+)$";
+
+    BoardPosition board_from_fen(std::string fen);
+    std::string board_to_fen(BoardPosition& pos);
 
     struct Move {
         Piece piece;

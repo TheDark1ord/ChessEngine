@@ -17,13 +17,6 @@ namespace movgen {
 
     void init_movgen();
 
-    inline const char* fen_regex_string =
-        "\\s*^(((?:[rnbqkpRNBQKP1-8]+\\/){7})[rnbqkpRNBQKP1-8]+)"
-        "\\s([b|w])\\s([K|Q|k|q]{1,4})\\s(-|[a-h][1-8])\\s(\\d+\\s\\d+)$";
-
-    BoardPosition board_from_fen(std::string fen);
-    std::string board_to_fen(BoardPosition& pos);
-
     // Generates pseudo legal moves
     template<movgen::PieceType type>
     void generate_piece_moves(bpos piece_pos, std::vector<Move>& generated, BoardPosition& pos);
