@@ -6,10 +6,19 @@ bitboard movgen::knight_attacks[64];
 bitboard movgen::king_attacks[64];
 
 size_t std::hash<movgen::BoardPosition>::operator()(
-    movgen::BoardPosition const& p) const noexcept {
-    // TODO: board hash
-    size_t hash = 0;
-    return size_t();
+    movgen::BoardPosition const &p) const noexcept
+{
+    // Concatenate all the variables into a single array
+    uint64_t *data = new uint64_t[movgen::PIECE_NB + 1];
+
+    std::memcpy(data, p.pieces, movgen::PIECE_NB * sizeof(uint64_t));
+    data[movgen::PIECE_NB] = (static_cast<uint8_t>(p.side_to_move)) | (static_cast<uint8_t>(p.castling) << 8) |
+                             (static_cast<uint16_t>(p.en_passant) << 16);
+
+    size_t hash;
+    MurmurHash3_x64_128(data, (movgen::PIECE_NB + 1) * sizeof(uint64_t), 0x00000000, &hash);
+
+    return hash;
 }
 
 movgen::BoardHash::BoardHash(BoardPosition& pos) {
