@@ -6,11 +6,17 @@
 #include <vector>
 #include "Bitboard.h"
 
-namespace movgen {
+namespace movgen
+{
     enum PieceType
     {
         NO_PIECE_TYPE,
-        KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN,
+        KING,
+        QUEEN,
+        ROOK,
+        BISHOP,
+        KNIGHT,
+        PAWN,
         ANY,
 
         PIECE_TYPE_NB = 8,
@@ -19,14 +25,30 @@ namespace movgen {
     enum Piece
     {
         NO_PIECE,
-        B_KING = KING, B_QUEEN, B_ROOK, B_BISHOP, B_KNIGHT, B_PAWN,
-        W_KING = KING + 8, W_QUEEN, W_ROOK, W_BISHOP, W_KNIGHT, W_PAWN,
+        B_KING = KING,
+        B_QUEEN,
+        B_ROOK,
+        B_BISHOP,
+        B_KNIGHT,
+        B_PAWN,
+        W_KING = KING + 8,
+        W_QUEEN,
+        W_ROOK,
+        W_BISHOP,
+        W_KNIGHT,
+        W_PAWN,
 
-        WHITE_PIECES, BLACK_PIECES, ALL_PIECES = 0,
+        WHITE_PIECES,
+        BLACK_PIECES,
+        ALL_PIECES = 0,
         PIECE_NB = 17
     };
 
-    enum Color { BLACK, WHITE };
+    enum Color
+    {
+        BLACK,
+        WHITE
+    };
 
     enum CastlingRights
     {
@@ -47,7 +69,7 @@ namespace movgen {
 
     enum MoveType
     {
-        NORMAL,
+        REGULAR,
         CAPTURE,
         PROMOTION,
         PROMOTION_CAPTURE,
@@ -82,7 +104,7 @@ namespace movgen {
         bitboard blockers = 0;
         unsigned int checks_num = 0;
 
-        //Squares attacked by the opposite side
+        // Squares attacked by the opposite side
         bitboard attacked;
     };
 
@@ -92,29 +114,31 @@ namespace movgen {
     ...
     7  6  5  4  3  2  1  0
     */
-    struct BoardPosition {
+    struct BoardPosition
+    {
         bitboard pieces[PIECE_NB];
         Piece squares[64];
 
         // Determines current side to move
         // 0 - White, 1 - Black
         Color side_to_move;
-        CastlingRights castling;
+        int castling_rights;
         bpos en_passant;
         unsigned int halfmove;
         unsigned int fullmove;
 
-        PositionInfo info;
+        PositionInfo *info;
     };
 
-    inline const char* fen_regex_string =
+    inline const char *fen_regex_string =
         "\\s*^(((?:[rnbqkpRNBQKP1-8]+\\/){7})[rnbqkpRNBQKP1-8]+)"
         "\\s([b|w])\\s([K|Q|k|q]{1,4})\\s(-|[a-h][1-8])\\s(\\d+\\s\\d+)$";
 
     BoardPosition board_from_fen(std::string fen);
-    std::string board_to_fen(BoardPosition& pos);
+    std::string board_to_fen(BoardPosition &pos);
 
-    struct Move {
+    struct Move
+    {
         Piece piece;
         bpos from;
         bpos to;
@@ -145,33 +169,91 @@ namespace movgen {
         Move(Piece piece, bpos from, bpos to);
 
         Move(Piece piece, bpos from, bpos to, unsigned char capture,
-            unsigned char promotion = 0, bool double_move = 0, bool en_passant = 0,
-            unsigned char castling = 0);
+             unsigned char promotion = 0, bool double_move = 0, bool en_passant = 0,
+             unsigned char castling = 0);
+
+        MoveType get_type() const;
     };
 
-    /// @brief scans all of the bitboards on the given board and return the bitboard
-    /// for which there is a bit set in a given position
-    /// @param pos position to scan
-    /// @param color if color of the piece is known, scan only bitboard of
-    /// corresponding color
-    ///     0 - scan all colors, 1 - scan only white, 2 - scan only black
-    /// @return piece, which is in given board cell
-    Piece get_piece(BoardPosition& b_pos, bpos pos, unsigned char color = 0);
+    Piece get_piece(BoardPosition &b_pos, bpos pos);
 
-    class BoardHash {
-        BoardHash(BoardPosition& pos);
-        // Define a custom hash operator to use in std::set
-        size_t operator()(BoardHash const& h) const;
+    constexpr movgen::PieceType get_piece_type(movgen::Piece piece)
+    {
+        switch (piece)
+        {
+        case movgen::B_KING:
+        case movgen::W_KING:
+            return movgen::KING;
+        case movgen::B_QUEEN:
+        case movgen::W_QUEEN:
+            return movgen::QUEEN;
+        case movgen::B_ROOK:
+        case movgen::W_ROOK:
+            return movgen::ROOK;
+        case movgen::B_BISHOP:
+        case movgen::W_BISHOP:
+            return movgen::BISHOP;
+        case movgen::B_KNIGHT:
+        case movgen::W_KNIGHT:
+            return movgen::KNIGHT;
+        case movgen::B_PAWN:
+        case movgen::W_PAWN:
+            return movgen::PAWN;
+        default:
+            return movgen::NO_PIECE_TYPE;
+        }
+    }
+
+    PieceType get_piece_type(BoardPosition &b_pos, bpos pos);
+
+    movgen::MoveType get_move_type(movgen::Move move);
+    movgen::Color get_piece_color(movgen::Piece piece);
+
+    constexpr movgen::Piece get_piece_from_type(movgen::PieceType type, movgen::Color c)
+    {
+        switch (type)
+        {
+        case movgen::KING:
+            return c == movgen::WHITE ? movgen::W_KING : movgen::B_KING;
+        case movgen::QUEEN:
+            return c == movgen::WHITE ? movgen::W_QUEEN : movgen::B_QUEEN;
+        case movgen::ROOK:
+            return c == movgen::WHITE ? movgen::W_ROOK : movgen::B_ROOK;
+        case movgen::BISHOP:
+            return c == movgen::WHITE ? movgen::W_BISHOP : movgen::B_BISHOP;
+        case movgen::KNIGHT:
+            return c == movgen::WHITE ? movgen::W_KNIGHT : movgen::B_KNIGHT;
+        case movgen::PAWN:
+            return c == movgen::WHITE ? movgen::W_PAWN : movgen::B_PAWN;
+        default:
+            return movgen::NO_PIECE;
+        }
+    }
+
+    class BoardHash
+    {
+    public:
+        BoardHash(BoardPosition &pos);
 
         size_t hash;
         // Number of times this position was reached
-        unsigned int reached = 1;
+        mutable unsigned int reached = 1;
+
+        bool operator==(const BoardHash &other) const;
     };
 }; // namespace movgen
 
+template <>
+struct std::hash<movgen::BoardHash>
+{
+    size_t operator()(movgen::BoardHash const &p) const noexcept;
+};
+
 // Define a hash function for BoardPosition
-template <> struct std::hash<movgen::BoardPosition> {
-    size_t operator()(movgen::BoardPosition const& p) const noexcept;
+template <>
+struct std::hash<movgen::BoardPosition>
+{
+    size_t operator()(movgen::BoardPosition const &p) const noexcept;
 };
 
 #endif
