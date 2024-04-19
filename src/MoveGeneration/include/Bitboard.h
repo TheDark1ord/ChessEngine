@@ -2,6 +2,7 @@
 #define BITBOARD_H
 
 #include <vector>
+#include <atomic>
 
 /*
     Bit numeration:
@@ -16,6 +17,7 @@ namespace bitb
 {
     // Initializes bitboard global variables
     void init();
+    extern std::atomic_bool initialized;
 
     constexpr void set_bit(bitboard *b, bpos pos) { *b |= 1ull << pos; }
     constexpr void clear_bit(bitboard *b, bpos pos) { *b |= ~(1ull << pos); }

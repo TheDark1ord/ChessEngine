@@ -1,6 +1,7 @@
 #include "../include/MagicNumbers.h"
 
-movgen::GeneratedMagics generated_magics;
+movgen::GeneratedMagics movgen::generated_magics;
+std::atomic_bool movgen::initialized_magics = false;
 
 bitboard movgen::get_bishop_attacks(bpos square, bitboard blocker) {
   uint64_t index = blocker & generated_magics.bishop_magics[square].mask;
@@ -163,6 +164,7 @@ void movgen::init_magics() {
       }
     }
   }
+  initialized_magics = true;
 }
 
 bool movgen::try_fill_table_bishop(bpos sq, Magic& magic) {

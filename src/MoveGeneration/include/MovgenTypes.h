@@ -38,8 +38,8 @@ namespace movgen
         W_KNIGHT,
         W_PAWN,
 
-        WHITE_PIECES,
-        BLACK_PIECES,
+        BLACK_PIECES = 7,
+        WHITE_PIECES = BLACK_PIECES + 8,
         ALL_PIECES = 0,
         PIECE_NB = 17
     };
@@ -105,7 +105,7 @@ namespace movgen
         unsigned int checks_num = 0;
 
         // Squares attacked by the opposite side
-        bitboard attacked;
+        bitboard attacked = 0;
     };
 
     /*
@@ -206,7 +206,6 @@ namespace movgen
 
     PieceType get_piece_type(BoardPosition &b_pos, bpos pos);
 
-    movgen::MoveType get_move_type(movgen::Move move);
     movgen::Color get_piece_color(movgen::Piece piece);
 
     constexpr movgen::Piece get_piece_from_type(movgen::PieceType type, movgen::Color c)

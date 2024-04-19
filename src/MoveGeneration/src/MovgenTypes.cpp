@@ -13,8 +13,13 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen)
     }
 
     movgen::BoardPosition return_pos;
-    int it = 0;
 
+    for (unsigned int i = 0; i < movgen::PIECE_NB; i++)
+        return_pos.pieces[i] = 0;
+    for (unsigned int i = 0; i < 64; i++)
+        return_pos.squares[i] = movgen::NO_PIECE;
+
+    int it = 0;
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)

@@ -1,9 +1,10 @@
 #include "../include/Bitboard.h"
 #include "../include/MagicNumbers.h"
 
-bitboard Line[64][64];
-bitboard Between[64][64];
-bitboard Between_in[64][64];
+bitboard bitb::Line[64][64];
+bitboard bitb::Between[64][64];
+bitboard bitb::Between_in[64][64];
+std::atomic_bool bitb::initialized = false;
 
 void bitb::init()
 {
@@ -34,9 +35,11 @@ void bitb::init()
             }
         }
     }
+
+    initialized = true;
 }
 
-inline std::vector<bpos> bitb::bitscan(bitboard board)
+std::vector<bpos> bitb::bitscan(bitboard board)
 {
     // https://www.chessprogramming.org/BitScan#Bitscan_by_Modulo
     static constexpr int lookup67[68] = {
@@ -63,7 +66,7 @@ inline std::vector<bpos> bitb::bitscan(bitboard board)
     return set_bits;
 }
 
-inline bpos bitb::pop_lsb(bitboard board)
+bpos bitb::pop_lsb(bitboard board)
 {
     // https://www.chessprogramming.org/BitScan#Bitscan_by_Modulo
     static constexpr int lookup67[68] = {

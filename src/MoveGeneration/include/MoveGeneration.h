@@ -12,7 +12,8 @@ namespace movgen
     extern bitboard knight_attacks[64];
     extern bitboard king_attacks[64];
 
-    void init_movgen();
+    void init();
+    extern std::atomic_bool initialized;
 
     // Generates pseudo legal moves
     // Instanciated for every piece type except a king and a pawn
@@ -22,7 +23,7 @@ namespace movgen
     template <>
     void generate_piece_moves<movgen::KING>(bpos piece_pos, BoardPosition &pos, movgen::Color c, std::vector<Move> *generated);
 
-    template <movgen::Color c, movgen::GenType type>
+    template <movgen::Color color>
     void generate_pawn_moves(BoardPosition &pos, std::vector<Move> *generated);
 
     template <movgen::PieceType type>
@@ -40,19 +41,19 @@ namespace movgen
     bitboard get_pseudo_attacks<movgen::KNIGHT>(bpos piece_pos, bitboard blocker);
 
     // Finds the theckers and number of checks for current side and writes them to info
-    template <Color c>
+    template <Color color>
     void get_checkers(BoardPosition pos, PositionInfo *info);
     // Finds pinned pieces and pinner pieces
-    template <Color c>
+    template <Color color>
     void get_pinners(BoardPosition pos, PositionInfo *info);
     // Get squares, that are attacked by all pieces of that color
-    template <Color c>
+    template <Color color>
     void get_attacked(BoardPosition pos, PositionInfo *info);
 
-    template <movgen::Color c>
+    template <movgen::Color color>
     std::vector<Move> *generate_all_moves(BoardPosition &pos);
     // Filters out non-legal moves from generated moves using PositionInfo
-    std::vector<Move> get_legal_moves(BoardPosition &pos, std::vector<Move> &generated);
+    std::vector<Move> *get_legal_moves(BoardPosition &pos, std::vector<Move> &generated);
 
     void make_move(movgen::BoardPosition *pos, movgen::Move &move, std::unordered_set<movgen::BoardHash> *hashed_positions);
 } // namespace movgen
@@ -63,7 +64,7 @@ static bool is_legal(movgen::BoardPosition &pos, movgen::Move move);
 static void bitb_movearray(movgen::Piece piece, bpos starting_pos, bitboard move_board,
                            bitboard them, movgen::BoardPosition &pos, std::vector<movgen::Move> *move_arr);
 
-template <movgen::Color c, bitb::Direction d>
+template <movgen::Color color, bitb::Direction d>
 static void make_promotions(std::vector<movgen::Move> *move_arr, bpos to, unsigned char capture);
 
 static void move_piece(movgen::BoardPosition *pos, movgen::Piece piece, bpos from, bpos to);
