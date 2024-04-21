@@ -4,6 +4,18 @@
 #include <regex>
 #include <stdexcept>
 
+movgen::BoardPosition::BoardPosition(const BoardPosition & other)
+{
+    std::memcpy(this->pieces, other.pieces, PIECE_NB * sizeof(bitboard));
+    std::memcpy(this->squares, other.squares, 64 * sizeof(Piece));
+
+    this->side_to_move = other.side_to_move;
+    this->castling_rights = other.castling_rights;
+    this->en_passant = other.en_passant;
+    this->halfmove = other.halfmove;
+    this->fullmove = other.fullmove;
+}
+
 movgen::BoardPosition movgen::board_from_fen(std::string fen)
 {
     static std::regex fen_regex(movgen::fen_regex_string);
@@ -26,7 +38,7 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen)
         {
             if (isdigit(fen[it]))
             {
-                j += static_cast<int>(fen[it] - '0');
+                j += static_cast<int>(fen[it] - '0') - 1;
                 it++;
 
                 if (j > 8)
@@ -176,14 +188,18 @@ EnPassant:
         throw std::runtime_error("Invalid position");
     }
 
-    while (fen[++it] == ' ')
+    while (fen[++it] == ' ' && it != (fen.size() - 1))
     {
     }
-    return_pos.halfmove = fen[it] - '0';
-    while (fen[++it] == ' ')
+    // Halfmove and fullmove specifier is optional
+    if (it != fen.size() - 1)
     {
+        return_pos.halfmove = fen[it] - '0';
+        while (fen[++it] == ' ')
+        {
+        }
+        return_pos.fullmove = fen[it] - '0';
     }
-    return_pos.fullmove = fen[it] - '0';
 
     return return_pos;
 }
@@ -199,14 +215,14 @@ movgen::MoveType movgen::Move::get_type() const
 {
     if (this->move_data == 0)
         return movgen::REGULAR;
+    else if (this->move_data & 0x200)
+        return movgen::EN_PASSANT;
     else if (this->move_data & 0x0F)
         return this->move_data & 0xF0 ? movgen::PROMOTION_CAPTURE : movgen::CAPTURE;
     else if (this->move_data & 0xF0)
         return movgen::PROMOTION;
     else if (this->move_data & 0x100)
         return movgen::DOUBLE_MOVE;
-    else if (this->move_data & 0x200)
-        return movgen::EN_PASSANT;
     else
         return movgen::CASTLING;
 }
@@ -236,8 +252,8 @@ movgen::Move::Move(Piece piece, bpos from, bpos to)
 movgen::Move::Move(Piece piece, bpos from, bpos to, unsigned char capture, unsigned char promotion, bool double_move, bool en_passant, unsigned char castling)
     : piece(piece), from(from), to(to), move_data(0)
 {
-    this->move_data |= piece & 0x0F;
-    this->move_data |= promotion & 0x0F << 4;
+    this->move_data |= (capture & 0x0F);
+    this->move_data |= (promotion & 0x0F) << 4;
     this->move_data |= double_move << 8;
     this->move_data |= en_passant << 9;
     this->move_data |= castling << 10;
@@ -248,7 +264,7 @@ movgen::BoardHash::BoardHash(BoardPosition &pos)
     this->hash = std::hash<movgen::BoardPosition>{}(pos);
 }
 
-bool movgen::BoardHash::operator==(const movgen::BoardHash& other) const
+bool movgen::BoardHash::operator==(const movgen::BoardHash &other) const
 {
     return this->hash == other.hash;
 }

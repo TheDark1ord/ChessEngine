@@ -41,10 +41,10 @@ namespace movgen
     bitboard get_pseudo_attacks<movgen::KNIGHT>(bpos piece_pos, bitboard blocker);
 
     // Finds the theckers and number of checks for current side and writes them to info
-    template <Color color>
+    template <Color them_c>
     void get_checkers(BoardPosition pos, PositionInfo *info);
     // Finds pinned pieces and pinner pieces
-    template <Color color>
+    template <Color them_c>
     void get_pinners(BoardPosition pos, PositionInfo *info);
     // Get squares, that are attacked by all pieces of that color
     template <Color color>
@@ -55,7 +55,8 @@ namespace movgen
     // Filters out non-legal moves from generated moves using PositionInfo
     std::vector<Move> *get_legal_moves(BoardPosition &pos, std::vector<Move> &generated);
 
-    void make_move(movgen::BoardPosition *pos, movgen::Move &move, std::unordered_set<movgen::BoardHash> *hashed_positions);
+    GameStatus make_move(movgen::BoardPosition *pos, movgen::Move &move, std::unordered_set<movgen::BoardHash> *hashed_positions,
+                         std::vector<movgen::Move> **new_moves);
 } // namespace movgen
 
 /// Static functions for use in this file only

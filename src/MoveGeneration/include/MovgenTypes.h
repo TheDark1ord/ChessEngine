@@ -50,6 +50,14 @@ namespace movgen
         WHITE
     };
 
+    enum GameStatus
+    {
+        GAME_CONTINUES,
+        DRAW,
+        WHITE_WINS,
+        BLACK_WINS
+    };
+
     enum CastlingRights
     {
         NO_CASTLING = 0,
@@ -116,6 +124,10 @@ namespace movgen
     */
     struct BoardPosition
     {
+        //Copy constructor
+        BoardPosition() = default;
+        BoardPosition(const BoardPosition& other);
+
         bitboard pieces[PIECE_NB];
         Piece squares[64];
 
@@ -132,7 +144,7 @@ namespace movgen
 
     inline const char *fen_regex_string =
         "\\s*^(((?:[rnbqkpRNBQKP1-8]+\\/){7})[rnbqkpRNBQKP1-8]+)"
-        "\\s([b|w])\\s([K|Q|k|q]{1,4})\\s(-|[a-h][1-8])\\s(\\d+\\s\\d+)$";
+        "\\s*([b|w])\\s*([K|Q|k|q]{1,4})\\s*(-|[a-h][1-8])\\s*(\\d+\\s\\d+){0,1}\\s*$";
 
     BoardPosition board_from_fen(std::string fen);
     std::string board_to_fen(BoardPosition &pos);

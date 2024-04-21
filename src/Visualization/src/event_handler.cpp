@@ -1,7 +1,7 @@
 #include "../headers/event_handler.hpp"
 #include "../headers/draw_board.hpp"
 
-void handle_event(sf::Event ev, sf::RenderWindow* window)
+void handle_event(sf::Event ev, sf::RenderWindow *window)
 {
     switch (ev.type)
     {
@@ -28,9 +28,8 @@ void handle_event(sf::Event ev, sf::RenderWindow* window)
         {
             sf::Vector2f mouse_pos = board->screen_to_board(static_cast<sf::Vector2f>(sf::Mouse::getPosition(*window)));
             board->select_square(
-                static_cast<int>(mouse_pos.x / board->get_cell_size()),
-                static_cast<int>(mouse_pos.y / board->get_cell_size())
-            );
+                static_cast<int>(mouse_pos.x / board->get_square_size()),
+                static_cast<int>(mouse_pos.y / board->get_square_size()));
             break;
         }
 

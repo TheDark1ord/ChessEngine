@@ -17,21 +17,21 @@ int main(int argc, char* argv[])
     {
         for (int i = 0; i < 10; i++)
         {
-            bitboard blocker_mask = gen;
-            bpos bishop_pos = static_cast<bpos>(gen % 64);
+            bitboard blocker_mask = gen();
+            bpos bishop_pos = static_cast<bpos>(gen() % 64);
 
-            bitboard expected = movgen::_generate_bishop_moves(blocker_mask, bishop_pos);
-            if (expected != movgen::get_bishop_attacks(blocker_mask, bishop_pos))
+            bitboard expected = movgen::_generate_bishop_moves(bishop_pos, blocker_mask);
+            if (expected != movgen::get_bishop_attacks(bishop_pos, blocker_mask))
                 return -1;
         }
 
         for (int i = 0; i < 10; i++)
         {
-            bitboard blocker_mask = gen;
-            bpos rook_pos = static_cast<bpos>(gen % 64);
+            bitboard blocker_mask = gen();
+            bpos rook_pos = static_cast<bpos>(gen() % 64);
 
-            bitboard expected = movgen::_generate_rook_moves(blocker_mask, rook_pos);
-            if (expected != movgen::get_rook_attacks(blocker_mask, rook_pos))
+            bitboard expected = movgen::_generate_rook_moves(rook_pos, blocker_mask);
+            if (expected != movgen::get_rook_attacks(rook_pos, blocker_mask))
                 return -1;
         }
     }

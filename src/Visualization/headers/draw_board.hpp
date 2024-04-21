@@ -23,28 +23,37 @@ const float board_scale = 0.9f;
 const float inner_board_scale = 0.9f;
 
 static float map_range(float input, float in_start, float in_end, float out_start,
-                float out_end) {
+                       float out_end)
+{
   return out_start +
          ((out_end - out_start) / (in_end - in_start)) * (input - in_start);
 }
 
-class Board {
+class Board
+{
 public:
   Board(sf::Vector2u window_size, bool flipped = false);
 
   void resize(sf::Vector2u new_window_size);
   void draw_board(sf::RenderWindow *window, movgen::BoardPosition *pos);
+  void draw_piece_moves(sf::RenderWindow *window, std::vector<movgen::Move> &moves);
 
   void flip_board();
+  bool is_flipped();
 
+  void select_square(sf::Vector2i mouse_pos);
   void select_square(int x_pos, int y_pos);
+  void deselect_square();
   int get_selected_square();
 
   // Practically usless now< but may become useeful later
   sf::Vector2f screen_to_board(sf::Vector2f screen_pos);
   sf::Vector2f board_to_screen(sf::Vector2f board_pos);
 
-  float get_cell_size();
+  bool within_bounds(float mouse_x, float mouse_y);
+
+  float get_square_size();
+  float get_size();
 
 private:
   // Theese functions adjust settings for the
@@ -78,8 +87,8 @@ private:
   float board_size;
 
   // Offset relative to (0, 0)
-  float board_offset;
-  float cell_size;
+  sf::Vector2f board_offset;
+  float square_size;
 
   bool flipped;
   int selected_square = -1;

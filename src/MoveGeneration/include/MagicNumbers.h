@@ -61,12 +61,12 @@ namespace movgen
     /// @param sq square, bishop position
     /// @param blocker positions of all the pieces on the board
     /// @return bishop moves bitboard(includes blocked squares)
-    bitboard _generate_bishop_moves(bitboard blocker, bpos sq);
+    bitboard _generate_bishop_moves(bpos sq, bitboard blocker);
 
     /// @brief see movgen::_generate_bishop_mask
     bitboard _generate_rook_mask(bpos sq);
     /// @brief see movgen::_generate_bishop_moves
-    bitboard _generate_rook_moves(bitboard blocker, bpos sq);
+    bitboard _generate_rook_moves(bpos sq, bitboard blocker);
 }; // namespace movgen
 
 #endif

@@ -33,14 +33,15 @@ namespace bitb
     };
 
     constexpr bitboard File[8]{
-        0x101010101010101ull,
-        0x101010101010101ull << 1,
-        0x101010101010101ull << 2,
-        0x101010101010101ull << 3,
-        0x101010101010101ull << 4,
-        0x101010101010101ull << 5,
-        0x101010101010101ull << 6,
-        0x101010101010101ull << 7};
+        0x8080808080808080,
+        0x8080808080808080 >> 1,
+        0x8080808080808080 >> 2,
+        0x8080808080808080 >> 3,
+        0x8080808080808080 >> 4,
+        0x8080808080808080 >> 5,
+        0x8080808080808080 >> 6,
+        0x8080808080808080 >> 7,
+    };
     constexpr bitboard Rank[8]{
         0xFFull,
         0xFFull << (8 * 1),
@@ -70,21 +71,21 @@ namespace bitb
 
     // Get a rank or a file of a given square
     constexpr bitboard sq_rank(bpos sq) { return Rank[sq >> 3]; }
-    constexpr bitboard sq_file(bpos sq) { return File[sq & 0b111]; }
+    constexpr bitboard sq_file(bpos sq) { return File[7 - sq & 0b111]; }
 
     template <bitb::Direction D>
     constexpr bitboard shift(bitboard bitb)
     {
         return D == bitb::UP                   ? bitb << 8
                : D == bitb::UP + bitb::UP      ? bitb << 16
-               : D == bitb::UP + bitb::LEFT    ? (bitb & ~File[7]) << 9
-               : D == bitb::UP + bitb::RIGHT   ? (bitb & ~File[0]) << 7
+               : D == bitb::UP + bitb::LEFT    ? (bitb & ~File[0]) << 9
+               : D == bitb::UP + bitb::RIGHT   ? (bitb & ~File[7]) << 7
                : D == bitb::DOWN               ? bitb >> 8
                : D == bitb::DOWN + bitb::DOWN  ? bitb >> 16
-               : D == bitb::DOWN + bitb::LEFT  ? (bitb & ~File[7]) >> 7
-               : D == bitb::DOWN + bitb::RIGHT ? (bitb & ~File[0]) >> 9
-               : D == bitb::LEFT               ? (bitb & ~File[7]) << 1
-               : D == bitb::RIGHT              ? (bitb & ~File[0]) >> 1
+               : D == bitb::DOWN + bitb::LEFT  ? (bitb & ~File[0]) >> 7
+               : D == bitb::DOWN + bitb::RIGHT ? (bitb & ~File[7]) >> 9
+               : D == bitb::LEFT               ? (bitb & ~File[0]) << 1
+               : D == bitb::RIGHT              ? (bitb & ~File[7]) >> 1
                                                : 0;
     };
 };
