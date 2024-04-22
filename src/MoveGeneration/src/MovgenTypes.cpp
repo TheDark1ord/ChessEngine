@@ -1,19 +1,33 @@
 #include "../include/MovgenTypes.h"
-#include "../include/MurmurHash3.h"
+#include "../include/Zobrist.h"
 #include <cassert>
 #include <regex>
 #include <stdexcept>
 
-movgen::BoardPosition::BoardPosition(const BoardPosition & other)
+movgen::BoardHash::BoardHash(BoardPosition &pos)
+    : key(0), prev(nullptr)
 {
-    std::memcpy(this->pieces, other.pieces, PIECE_NB * sizeof(bitboard));
-    std::memcpy(this->squares, other.squares, 64 * sizeof(Piece));
+}
 
-    this->side_to_move = other.side_to_move;
-    this->castling_rights = other.castling_rights;
-    this->en_passant = other.en_passant;
-    this->halfmove = other.halfmove;
-    this->fullmove = other.fullmove;
+movgen::BoardHash::BoardHash(BoardHash *prev)
+{
+    std::memcpy(this, prev, sizeof(movgen::BoardHash));
+    this->prev = prev;
+}
+
+bool movgen::BoardHash::operator==(const movgen::BoardHash &other) const
+{
+    return this->key == other.key;
+}
+
+movgen::BoardPosition::~BoardPosition()
+{
+    if (this->info == nullptr)
+        return;
+
+    this->info->pins.clear();
+    this->info->pins.shrink_to_fit();
+    delete this->info;
 }
 
 movgen::BoardPosition movgen::board_from_fen(std::string fen)
@@ -112,6 +126,8 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen)
         }
     }
 
+    return_pos.hash = new movgen::BoardHash(return_pos);
+
     // Bitboard, representing 1st and last rows
     constexpr bitboard top_and_bottom = bitb::Rank[0] | bitb::Rank[7];
     // Test that no pawns are on the first and last rows
@@ -160,10 +176,10 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen)
             break;
 
         default:
-            return_pos.castling_rights = NO_CASTLING;
+            return_pos.hash->castling_rights = NO_CASTLING;
         }
     }
-    return_pos.castling_rights = static_cast<CastlingRights>(castling);
+    return_pos.hash->castling_rights = static_cast<CastlingRights>(castling);
 
 EnPassant:
     while (fen[++it] == ' ')
@@ -174,32 +190,34 @@ EnPassant:
     {
         // It is a valid position, but considering, that with correct position
         // a pawn cannot take that en passant
-        return_pos.en_passant = 0;
+        return_pos.hash->en_passant = 0;
     }
     else
     {
-        return_pos.en_passant = (fen[it] - 'a') + (fen[it + 1] - '1') * 8;
+        return_pos.hash->en_passant = (fen[it] - 'a') + (fen[it + 1] - '1') * 8;
         it++;
     }
     // Test that en passant square is on 3rd or 6th row
     // TODO: possible bug here(maybe should sub 1 from return_pos.en_passant)
-    if (bitb::sq_bitb(return_pos.en_passant) & (bitb::Rank[2] | bitb::Rank[5]))
+    if (bitb::sq_bitb(return_pos.hash->en_passant) & (bitb::Rank[2] | bitb::Rank[5]))
     {
         throw std::runtime_error("Invalid position");
     }
 
-    while (fen[++it] == ' ' && it != (fen.size() - 1))
+    while (it != (fen.size() - 1) && fen[++it] == ' ')
     {
     }
     // Halfmove and fullmove specifier is optional
     if (it != fen.size() - 1)
     {
-        return_pos.halfmove = fen[it] - '0';
+        return_pos.hash->ply = fen[it] - '0';
         while (fen[++it] == ' ')
         {
         }
         return_pos.fullmove = fen[it] - '0';
     }
+
+    return_pos.hash->key = zobrist::hash(return_pos, return_pos.hash);
 
     return return_pos;
 }
@@ -259,34 +277,17 @@ movgen::Move::Move(Piece piece, bpos from, bpos to, unsigned char capture, unsig
     this->move_data |= castling << 10;
 }
 
-movgen::BoardHash::BoardHash(BoardPosition &pos)
+movgen::Piece movgen::Move::get_captured() const
 {
-    this->hash = std::hash<movgen::BoardPosition>{}(pos);
+    // En-passant
+    if (this->move_data & 0x200)
+        return movgen::get_piece_from_type(
+            movgen::PAWN, static_cast<movgen::Color>(!movgen::get_piece_color(this->piece)));
+    else
+        return static_cast<movgen::Piece>(this->move_data & 0x0F);
 }
 
-bool movgen::BoardHash::operator==(const movgen::BoardHash &other) const
+movgen::Piece movgen::Move::get_promoted() const
 {
-    return this->hash == other.hash;
-}
-
-size_t std::hash<movgen::BoardHash>::operator()(
-    movgen::BoardHash const &p) const noexcept
-{
-    return p.hash;
-}
-
-size_t std::hash<movgen::BoardPosition>::operator()(
-    movgen::BoardPosition const &p) const noexcept
-{
-    // Concatenate all the variables into a single array
-    uint64_t *data = new uint64_t[movgen::PIECE_NB + 1];
-
-    std::memcpy(data, p.pieces, movgen::PIECE_NB * sizeof(uint64_t));
-    data[movgen::PIECE_NB] = (static_cast<uint8_t>(p.side_to_move)) | (static_cast<uint8_t>(p.castling_rights) << 8) |
-                             (static_cast<uint16_t>(p.en_passant) << 16);
-
-    size_t hash[2];
-    MurmurHash3_x64_128(data, (movgen::PIECE_NB + 1) * sizeof(uint64_t), 0x00000000, &hash);
-
-    return hash[0];
+    return static_cast<movgen::Piece>((this->move_data >> 4) & 0x0F);
 }

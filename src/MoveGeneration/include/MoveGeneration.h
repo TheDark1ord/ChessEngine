@@ -42,21 +42,21 @@ namespace movgen
 
     // Finds the theckers and number of checks for current side and writes them to info
     template <Color them_c>
-    void get_checkers(BoardPosition pos, PositionInfo *info);
+    void get_checkers(BoardPosition &pos, PositionInfo *info);
     // Finds pinned pieces and pinner pieces
     template <Color them_c>
-    void get_pinners(BoardPosition pos, PositionInfo *info);
+    void get_pinners(BoardPosition &pos, PositionInfo *info);
     // Get squares, that are attacked by all pieces of that color
     template <Color color>
-    void get_attacked(BoardPosition pos, PositionInfo *info);
+    void get_attacked(BoardPosition &pos, PositionInfo *info);
 
     template <movgen::Color color>
     std::vector<Move> *generate_all_moves(BoardPosition &pos);
     // Filters out non-legal moves from generated moves using PositionInfo
     std::vector<Move> *get_legal_moves(BoardPosition &pos, std::vector<Move> &generated);
 
-    GameStatus make_move(movgen::BoardPosition *pos, movgen::Move &move, std::unordered_set<movgen::BoardHash> *hashed_positions,
-                         std::vector<movgen::Move> **new_moves);
+    GameStatus make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move> **new_moves);
+    void undo_move(movgen::BoardPosition *pos, movgen::Move &move);
 } // namespace movgen
 
 /// Static functions for use in this file only

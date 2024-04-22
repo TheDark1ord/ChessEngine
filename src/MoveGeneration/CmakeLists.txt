@@ -3,7 +3,7 @@ add_library(MoveGeneration STATIC
     src/MagicNumbers.cpp
     src/MovgenTypes.cpp
     src/Bitboard.cpp
-    src/MurmurHash3.cpp
+    src/Zobrist.cpp
 )
 
 set_target_properties(MoveGeneration PROPERTIES PUBLIC_HEADER

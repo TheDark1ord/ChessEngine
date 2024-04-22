@@ -27,73 +27,17 @@ const std::vector<uint64_t> positions_reached[]{
     {44, 1486, 62379, 2103487, 89941194},
 };
 const char *squares[]{
-    "h1",
-    "g1",
-    "f1",
-    "e1",
-    "d1",
-    "c1",
-    "b1",
-    "a1",
-    "h2",
-    "g2",
-    "f2",
-    "e2",
-    "d2",
-    "c2",
-    "b2",
-    "a2",
-    "h3",
-    "g3",
-    "f3",
-    "e3",
-    "d3",
-    "c3",
-    "b3",
-    "a3",
-    "h4",
-    "g4",
-    "f4",
-    "e4",
-    "d4",
-    "c4",
-    "b4",
-    "a4",
-    "h5",
-    "g5",
-    "f5",
-    "e5",
-    "d5",
-    "c5",
-    "b5",
-    "a5",
-    "h6",
-    "g6",
-    "f6",
-    "e6",
-    "d6",
-    "c6",
-    "b6",
-    "a6",
-    "h7",
-    "g7",
-    "f7",
-    "e7",
-    "d7",
-    "c7",
-    "b7",
-    "a7",
-    "h8",
-    "g8",
-    "f8",
-    "e8",
-    "d8",
-    "c8",
-    "b8",
-    "a8",
+    "h1", "g1", "f1", "e1", "d1", "c1", "b1", "a1",
+    "h2", "g2", "f2", "e2", "d2", "c2", "b2", "a2",
+    "h3", "g3", "f3", "e3", "d3", "c3", "b3", "a3",
+    "h4", "g4", "f4", "e4", "d4", "c4", "b4", "a4",
+    "h5", "g5", "f5", "e5", "d5", "c5", "b5", "a5",
+    "h6", "g6", "f6", "e6", "d6", "c6", "b6", "a6",
+    "h7", "g7", "f7", "e7", "d7", "c7", "b7", "a7",
+    "h8", "g8", "f8", "e8", "d8", "c8", "b8", "a8",
 };
 
-uint64_t count_moves(movgen::BoardPosition &initial, unsigned int depth, bool toplevel = false);
+uint64_t count_moves(movgen::BoardPosition &initial, std::vector<movgen::Move> *cur_moves, unsigned int depth, bool toplevel = false);
 
 int main(int argc, char *argv[])
 {
@@ -108,11 +52,22 @@ int main(int argc, char *argv[])
     const std::vector<uint64_t> *pos_num = &positions_reached[test_index];
 
     movgen::BoardPosition initial_position = movgen::board_from_fen(*fen_string);
-    for (int i = 0; i < pos_num->size(); i++)
+    //movgen::BoardPosition initial_position = movgen::board_from_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R4K1R b kq - 1 1");
+
+    int depth = pos_num->size();
+    if (argc > 2)
+        depth = std::atoi(argv[2]);
+
+    std::vector<movgen::Move> *cur_moves = initial_position.side_to_move == movgen::WHITE ?
+                movgen::generate_all_moves<movgen::WHITE>(initial_position) :
+                movgen::generate_all_moves<movgen::BLACK>(initial_position);
+    cur_moves = movgen::get_legal_moves(initial_position, *cur_moves);
+
+    for (int i = 0; i < depth; i++)
     {
         printf("Depth: %d\n", i + 1);
 
-        uint64_t counted = count_moves(initial_position, i + 1, true);
+        uint64_t counted = count_moves(initial_position, cur_moves, i + 1, true);
 
         printf("\nNodes reached: %llu\n\n", counted);
 
@@ -123,44 +78,34 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-uint64_t count_moves(movgen::BoardPosition &initial, unsigned int depth, bool toplevel)
+uint64_t count_moves(movgen::BoardPosition &initial, std::vector<movgen::Move> *cur_moves, unsigned int depth, bool toplevel)
 {
-    static std::stack<std::tuple<
-        movgen::BoardPosition,
-        std::unordered_set<movgen::BoardHash>>>
-        prev_positions;
-
-    movgen::BoardPosition cur_position = initial;
-    std::unordered_set<movgen::BoardHash> cur_hashed;
-    std::vector<movgen::Move> *cur_moves = cur_position.side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(cur_position) : movgen::generate_all_moves<movgen::BLACK>(cur_position);
-    cur_moves = movgen::get_legal_moves(cur_position, *cur_moves);
-
     if (depth == 1)
         return cur_moves->size();
 
-    prev_positions.push({cur_position, cur_hashed});
+    std::vector<movgen::Move>* new_moves = nullptr;
 
     uint64_t move_count = 0;
-    for (auto move : *cur_moves)
+    for (auto& move : *cur_moves)
     {
-        std::vector<movgen::Move> *new_moves;
-        auto result = movgen::make_move(&cur_position, move, &cur_hashed, &new_moves);
+        auto result = movgen::make_move(&initial, move, &new_moves);
 
         if (result == movgen::GAME_CONTINUES)
         {
-            auto counted = count_moves(cur_position, depth - 1);
+            auto counted = count_moves(initial, new_moves, depth - 1);
             move_count += counted;
 
             if (toplevel)
                 printf("%s%s: %llu\n", squares[move.from], squares[move.to], counted);
         }
-
-        delete new_moves;
-        auto _prev = prev_positions.top();
-        cur_position = std::get<0>(_prev);
-        cur_hashed = std::get<1>(_prev);
+        movgen::undo_move(&initial, move);
     }
-
-    prev_positions.pop();
+    
+    if (new_moves != nullptr)
+    {
+        std::vector<movgen::Move>().swap(*new_moves);
+        delete new_moves;
+        new_moves = nullptr;
+    }
     return move_count;
 }

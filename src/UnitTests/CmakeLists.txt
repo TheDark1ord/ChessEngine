@@ -20,4 +20,11 @@ set_target_properties(PerftTest
     RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/../app/bin/tests"
 )
 
-add_test(NAME movgen.sliding_pieces COMMAND SlidingPiecesTest)
+add_test(NAME movgen.sliding.random COMMAND SlidingPiecesTest)
+
+add_test(NAME movgen.perft.start_pos        COMMAND PerftTest 0 5)
+add_test(NAME movgen.perft.Kiwipete_pos     COMMAND PerftTest 1 5)
+add_test(NAME movgen.perft.pos_3            COMMAND PerftTest 2 5)
+add_test(NAME movgen.perft.pos_4            COMMAND PerftTest 3 5)
+add_test(NAME movgen.perft.pos_4_flipped    COMMAND PerftTest 4 5)
+add_test(NAME movgen.perft.pos_5            COMMAND PerftTest 5 5)

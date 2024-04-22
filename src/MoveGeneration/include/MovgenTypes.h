@@ -116,6 +116,25 @@ namespace movgen
         bitboard attacked = 0;
     };
 
+    class BoardPosition;
+
+    class BoardHash
+    {
+    public:
+        BoardHash(BoardPosition &pos);
+        BoardHash(BoardHash* prev);
+
+        // Data for undoing a move
+        int castling_rights;
+        bpos en_passant;
+        uint32_t ply; // Halfmove
+
+        size_t key;
+        BoardHash* prev;
+
+        bool operator==(const BoardHash &other) const;
+    };
+
     /*
     Bit numeration in bitboards:
     63 62 61 60 59 58 57 56
@@ -124,9 +143,7 @@ namespace movgen
     */
     struct BoardPosition
     {
-        //Copy constructor
-        BoardPosition() = default;
-        BoardPosition(const BoardPosition& other);
+        ~BoardPosition();
 
         bitboard pieces[PIECE_NB];
         Piece squares[64];
@@ -134,12 +151,10 @@ namespace movgen
         // Determines current side to move
         // 0 - White, 1 - Black
         Color side_to_move;
-        int castling_rights;
-        bpos en_passant;
-        unsigned int halfmove;
         unsigned int fullmove;
 
-        PositionInfo *info;
+        PositionInfo *info = nullptr;
+        movgen::BoardHash *hash = new movgen::BoardHash(*this);
     };
 
     inline const char *fen_regex_string =
@@ -185,6 +200,8 @@ namespace movgen
              unsigned char castling = 0);
 
         MoveType get_type() const;
+        Piece get_captured() const;
+        Piece get_promoted() const;
     };
 
     Piece get_piece(BoardPosition &b_pos, bpos pos);
@@ -240,18 +257,6 @@ namespace movgen
             return movgen::NO_PIECE;
         }
     }
-
-    class BoardHash
-    {
-    public:
-        BoardHash(BoardPosition &pos);
-
-        size_t hash;
-        // Number of times this position was reached
-        mutable unsigned int reached = 1;
-
-        bool operator==(const BoardHash &other) const;
-    };
 }; // namespace movgen
 
 template <>

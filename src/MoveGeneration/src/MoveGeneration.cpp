@@ -1,5 +1,6 @@
 #include "../include/MoveGeneration.h"
 #include "../include/MagicNumbers.h"
+#include "../include/Zobrist.h"
 #include <cassert>
 #include <unordered_set>
 
@@ -9,6 +10,8 @@ std::atomic_bool movgen::initialized = false;
 
 void movgen::init()
 {
+    zobrist::init();
+
     const std::tuple<int, int> king_moves[]{
         {-1, -1},
         {0, -1},
@@ -103,18 +106,18 @@ void movgen::generate_piece_moves<movgen::KING>(bpos piece_pos, BoardPosition &p
         generated->push_back(Move(get_piece_from_type(movgen::KING, c), piece_pos, move_to, get_piece(pos, move_to)));
 
     // Check for castling
-    if (pos.castling_rights & short_castle)
+    if (pos.hash->castling_rights & short_castle)
         // Check if no pieces are blocking the castling
         if (!(bitb::Between_in[piece_pos][piece_pos - 3] & pos.pieces[ALL_PIECES]))
             // Check if there is a rook
-            if (pos.pieces[B_ROOK + us] & (bitb::sq_rank(piece_pos) & bitb::File[0]))
+            if (pos.pieces[B_ROOK + us] & (bitb::sq_rank(piece_pos) & bitb::File[7]))
                 generated->push_back(Move(get_piece_from_type(movgen::KING, c), piece_pos, piece_pos - 2, 0, 0, 0, 0, 1));
 
-    if (pos.castling_rights & long_castle)
+    if (pos.hash->castling_rights & long_castle)
         // Check if no pieces are blocking the castling
         if (!(bitb::Between_in[piece_pos][piece_pos + 4] & pos.pieces[ALL_PIECES]))
             // Check if there is a rook
-            if (pos.pieces[B_ROOK + us] & (bitb::sq_rank(piece_pos) & bitb::File[7]))
+            if (pos.pieces[B_ROOK + us] & (bitb::sq_rank(piece_pos) & bitb::File[0]))
                 generated->push_back(Move(get_piece_from_type(movgen::KING, c), piece_pos, piece_pos + 2, 0, 0, 0, 0, 2));
 }
 
@@ -169,14 +172,14 @@ void movgen::generate_pawn_moves(BoardPosition &pos, std::vector<Move> *generate
         generated->push_back(Move(piece, move_to - forward - bitb::RIGHT, move_to, get_piece(pos, move_to)));
 
     // En passant
-    if (pos.en_passant != 0)
+    if (pos.hash->en_passant != 0)
     {
-        bitboard candidate_pawns = (bitb::shift<bitb::LEFT>(1ull << (pos.en_passant + back)) |
-                                    bitb::shift<bitb::RIGHT>(1ull << (pos.en_passant + back))) &
+        bitboard candidate_pawns = (bitb::shift<bitb::LEFT>(1ull << (pos.hash->en_passant + back)) |
+                                    bitb::shift<bitb::RIGHT>(1ull << (pos.hash->en_passant + back))) &
                                    pos.pieces[B_PAWN + us];
 
         for (auto move_from : bitb::bitscan(candidate_pawns))
-            generated->push_back(Move(piece, move_from, pos.en_passant,
+            generated->push_back(Move(piece, move_from, pos.hash->en_passant,
                                       get_piece_from_type(movgen::PAWN, color), 0, false, true, 0));
     }
 }
@@ -210,7 +213,7 @@ bitboard movgen::get_pseudo_attacks<movgen::KNIGHT>(bpos piece_pos, bitboard blo
 }
 
 template <movgen::Color them_c>
-void movgen::get_checkers(BoardPosition pos, PositionInfo *info)
+void movgen::get_checkers(BoardPosition &pos, PositionInfo *info)
 {
     constexpr unsigned int them = 8 * them_c;
     constexpr unsigned int us = 8 - them;
@@ -258,7 +261,7 @@ void movgen::get_checkers(BoardPosition pos, PositionInfo *info)
 }
 
 template <movgen::Color them_c>
-void movgen::get_pinners(BoardPosition pos, PositionInfo *info)
+void movgen::get_pinners(BoardPosition &pos, PositionInfo *info)
 {
     constexpr unsigned int them = 8 * them_c;
     constexpr unsigned int us = 8 - them;
@@ -311,12 +314,12 @@ void movgen::get_pinners(BoardPosition pos, PositionInfo *info)
 
     // It is possible that this code detects a check instead of a pin, but in that case we would not be able to do en passant anyway
     // Check for en passant pin
-    if (pos.en_passant != 0)
+    if (pos.hash->en_passant != 0)
     {
         // If the king is not on the same rank as the pawns, en passant pin is impossible
-        if (bitb::shift<forward>(bitb::sq_rank(king_pos)) == bitb::sq_rank(pos.en_passant))
+        if (bitb::shift<forward>(bitb::sq_rank(king_pos)) == bitb::sq_rank(pos.hash->en_passant))
         {
-            bitboard left_pawn = bitb::shift<back_left>(bitb::sq_bitb(pos.en_passant));
+            bitboard left_pawn = bitb::shift<back_left>(bitb::sq_bitb(pos.hash->en_passant));
             if (left_pawn & pos.pieces[B_PAWN + us])
             {
                 bitboard wo_left = pos.pieces[ALL_PIECES] ^ left_pawn;
@@ -325,7 +328,7 @@ void movgen::get_pinners(BoardPosition pos, PositionInfo *info)
                     info->en_passant_pin = 0;
             }
 
-            bitboard right_pawn = bitb::shift<back_right>(bitb::sq_bitb(pos.en_passant));
+            bitboard right_pawn = bitb::shift<back_right>(bitb::sq_bitb(pos.hash->en_passant));
             if (&pos.pieces[B_PAWN + us])
             {
                 bitboard wo_right = pos.pieces[ALL_PIECES] ^ right_pawn;
@@ -338,7 +341,7 @@ void movgen::get_pinners(BoardPosition pos, PositionInfo *info)
 }
 
 template <movgen::Color color>
-void movgen::get_attacked(BoardPosition pos, PositionInfo *info)
+void movgen::get_attacked(BoardPosition &pos, PositionInfo *info)
 {
     constexpr unsigned int us = 8 * color;
     constexpr bitb::Direction forward = color == WHITE ? bitb::UP : bitb::DOWN;
@@ -378,6 +381,8 @@ std::vector<movgen::Move> *movgen::generate_all_moves(BoardPosition &pos)
 
     movgen::generate_pawn_moves<color>(pos, moves);
 
+    if (pos.info != nullptr)
+        delete pos.info;
     pos.info = new PositionInfo;
 
     get_checkers<col_them>(pos, pos.info);
@@ -439,32 +444,41 @@ std::vector<movgen::Move> *movgen::get_legal_moves(BoardPosition &pos, std::vect
     return legal_moves;
 }
 
-movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &move, std::unordered_set<movgen::BoardHash> *hashed_positions, std::vector<movgen::Move> **new_moves)
+movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move> **new_moves)
 {
     const bitb::Direction down = pos->side_to_move == movgen::WHITE ? bitb::DOWN : bitb::UP;
     const movgen::Color cur_color = pos->side_to_move;
+    const uint16_t them = cur_color == movgen::BLACK ? 0 : 8;
+
+    const movgen::Piece captured = move.get_type() == movgen::EN_PASSANT ? static_cast<movgen::Piece>(movgen::B_PAWN + them) : movgen::get_piece(*pos, move.to);
+
+    pos->hash = new BoardHash(pos->hash);
+    pos->hash->key ^= zobrist::side;
 
     // Flip the color
     pos->side_to_move = static_cast<movgen::Color>(!pos->side_to_move);
     if (pos->side_to_move == movgen::WHITE)
         pos->fullmove++;
-    pos->halfmove++; // Reset later, if necessary
-    pos->en_passant = 0;
+    pos->hash->ply++; // Reset later, if necessary
+    pos->hash->en_passant = 0;
 
     switch (move.get_type())
     {
     case CAPTURE:
-        pos->pieces[pos->squares[move.to]] &= ~(1ull << move.to);
+        pos->pieces[captured] &= ~(1ull << move.to);
         pos->squares[move.to] = movgen::NO_PIECE;
+        pos->hash->ply = 0;
 
-        pos->halfmove = 0;
-        hashed_positions->clear();
+        pos->hash->key ^= zobrist::table[captured][move.to];
     // Fallthrough
     case REGULAR:
         move_piece(pos, move.piece, move.from, move.to);
+        pos->hash->key ^= zobrist::table[move.piece][move.from];
+        pos->hash->key ^= zobrist::table[move.piece][move.to];
         break;
     case PROMOTION_CAPTURE:
         pos->pieces[pos->squares[move.to]] &= ~(1ull << move.to);
+        pos->hash->key ^= zobrist::table[captured][move.to];
     // Fallthrough
     case PROMOTION:
     {
@@ -478,16 +492,26 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
 
         pos->squares[move.from] = movgen::NO_PIECE;
         pos->squares[move.to] = new_piece;
+
+        pos->hash->key ^= zobrist::table[move.piece][move.from];
+        pos->hash->key ^= zobrist::table[new_piece][move.to];
         break;
     }
     case EN_PASSANT:
         pos->pieces[pos->squares[move.to + down]] ^= 1ull << (move.to + down);
         pos->squares[move.to + down] = movgen::NO_PIECE;
         move_piece(pos, move.piece, move.from, move.to);
+
+        pos->hash->key ^= zobrist::table[move.piece][move.from];
+        pos->hash->key ^= zobrist::table[move.piece][move.to];
+        pos->hash->key ^= zobrist::table[captured][move.to];
         break;
     case DOUBLE_MOVE:
-        pos->en_passant = move.to + down;
+        pos->hash->en_passant = move.to + down;
         move_piece(pos, move.piece, move.from, move.to);
+
+        pos->hash->key ^= zobrist::table[move.piece][move.from];
+        pos->hash->key ^= zobrist::table[move.piece][move.to];
         break;
     case CASTLING:
     {
@@ -497,42 +521,32 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
         // Short castling
         if (((move.move_data >> 10) & 0x3) == 1)
         {
-            pos->pieces[move.piece] &= ~(1ull << move.from);
-            pos->pieces[move.piece] |= king_rank & bitb::File[6];
-            pos->squares[move.from] = movgen::NO_PIECE;
-            pos->squares[move.from - 2] = move.piece;
+            move_piece(pos, move.piece, move.from, move.to);
+            move_piece(pos, rook_piece, move.from - 3, move.from - 1);
 
-            pos->pieces[rook_piece] &= ~(1ull << (move.from - 3));
-            pos->pieces[rook_piece] |= king_rank & bitb::File[5];
-            pos->squares[move.from - 3] = movgen::NO_PIECE;
-            pos->squares[move.from - 1] = rook_piece;
+            pos->hash->key ^= zobrist::table[rook_piece][move.from - 3];
+            pos->hash->key ^= zobrist::table[rook_piece][move.from - 1];
         }
         else
         {
-            pos->pieces[move.piece] &= ~(1ull << move.from);
-            pos->pieces[move.piece] |= king_rank & bitb::File[2];
-            pos->squares[move.from] = movgen::NO_PIECE;
-            pos->squares[move.from + 2] = move.piece;
+            move_piece(pos, move.piece, move.from, move.to);
+            move_piece(pos, rook_piece, move.from + 4, move.from + 1);
 
-            pos->pieces[rook_piece] &= ~(1ull << (move.from + 4));
-            pos->pieces[rook_piece] |= king_rank & bitb::File[3];
-            pos->squares[move.from + 4] = movgen::NO_PIECE;
-            pos->squares[move.from + 1] = rook_piece;
+            pos->hash->key ^= zobrist::table[rook_piece][move.from + 4];
+            pos->hash->key ^= zobrist::table[rook_piece][move.from + 1];
         }
 
-        pos->castling_rights ^= cur_color == WHITE ? movgen::WHITE_CASTLE : BLACK_CASTLE;
+        pos->hash->castling_rights &= ~(cur_color == WHITE ? movgen::WHITE_CASTLE : BLACK_CASTLE);
 
-        pos->halfmove = 0;
-        hashed_positions->clear();
+        pos->hash->ply = 0;
+        pos->hash->key ^= zobrist::table[move.piece][move.from];
+        pos->hash->key ^= zobrist::table[move.piece][move.to];
         break;
     }
     }
 
     if (movgen::get_piece_type(move.piece) == movgen::PAWN)
-    {
-        pos->halfmove = 0;
-        hashed_positions->clear();
-    }
+        pos->hash->ply = 0;
 
     // Assign composite bitboards
     pos->pieces[BLACK_PIECES] = pos->pieces[B_KING] | pos->pieces[B_QUEEN] |
@@ -544,31 +558,62 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
     pos->pieces[ALL_PIECES] = pos->pieces[BLACK_PIECES] | pos->pieces[WHITE_PIECES];
 
     if (movgen::get_piece_type(move.piece) == movgen::KING)
-        pos->castling_rights = movgen::NO_CASTLING;
+    {
+        movgen::CastlingRights castling_change = cur_color == movgen::WHITE ? movgen::WHITE_CASTLE : movgen::BLACK_CASTLE;
+
+        if (pos->hash->castling_rights & castling_change)
+        {
+            pos->hash->ply = 0;
+            pos->hash->key ^= zobrist::castling[castling_change];
+            pos->hash->castling_rights ^= castling_change;
+        }
+    }
     else if (movgen::get_piece_type(move.piece) == movgen::ROOK)
     {
-        // a rank rook
-        if (pos->pieces[move.piece] & bitb::File[0])
-            pos->castling_rights ^= cur_color == WHITE ? movgen::WHITE_LONG : BLACK_LONG;
+        movgen::CastlingRights castling_change;
         // h rank rook
+        if (pos->pieces[move.piece] & bitb::File[0])
+            castling_change = cur_color == WHITE ? movgen::WHITE_SHORT : BLACK_SHORT;
+        // a rank rook
         else if (pos->pieces[move.piece] & bitb::File[7])
-            pos->castling_rights ^= cur_color == WHITE ? movgen::WHITE_SHORT : BLACK_SHORT;
+            castling_change = cur_color == WHITE ? movgen::WHITE_LONG : BLACK_LONG;
+
+        if (pos->hash->castling_rights & castling_change)
+        {
+            pos->hash->ply = 0;
+            pos->hash->key ^= zobrist::castling[castling_change];
+            pos->hash->castling_rights ^= castling_change;
+        }
     }
 
-    auto cur_hash = movgen::BoardHash(*pos);
-    if (auto prev = hashed_positions->find(cur_hash); prev != hashed_positions->end())
+    // Check for 3 fold repetition rule
+    if (pos->hash->ply > 2)
     {
-        if (++prev->reached == 3)
+        uint16_t reps = 0;
+        movgen::BoardHash *hash_it = pos->hash;
+        do
+        {
+            hash_it = hash_it->prev;
+            reps += hash_it->key == pos->hash->key;
+        } while (hash_it->ply > 0);
+
+        if (reps >= 3)
             return movgen::DRAW;
     }
-    else
-        hashed_positions->insert(cur_hash);
 
-    *new_moves = new std::vector<movgen::Move>;
-    *new_moves = pos->side_to_move == movgen::WHITE ?
-                movgen::generate_all_moves<movgen::WHITE>(*pos) :
-                movgen::generate_all_moves<movgen::BLACK>(*pos);
-    *new_moves = movgen::get_legal_moves(*pos, **new_moves);
+    if (*new_moves != nullptr)
+    {
+        std::vector<movgen::Move>().swap(**new_moves);
+        delete *new_moves;
+        *new_moves = nullptr;
+    }
+
+    std::vector<movgen::Move> *pseudo_legal;
+    pseudo_legal = pos->side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(*pos) : movgen::generate_all_moves<movgen::BLACK>(*pos);
+    *new_moves = movgen::get_legal_moves(*pos, *pseudo_legal);
+
+    std::vector<movgen::Move>().swap(*pseudo_legal); // Clear the vector
+    delete pseudo_legal;
 
     if ((*new_moves)->size() == 0)
     {
@@ -577,10 +622,68 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
         else
             return movgen::DRAW;
     }
-    if (pos->halfmove == 50)
+    if (pos->hash->ply == 50)
         return movgen::DRAW;
 
     return movgen::GAME_CONTINUES;
+}
+
+void movgen::undo_move(movgen::BoardPosition *pos, movgen::Move &move)
+{
+    pos->side_to_move = static_cast<movgen::Color>(!pos->side_to_move);
+    if (pos->side_to_move == movgen::BLACK)
+        pos->fullmove--;
+
+    const bitb::Direction down = pos->side_to_move == movgen::WHITE ? bitb::DOWN : bitb::UP;
+
+    const movgen::Piece captured = move.get_captured();
+    const movgen::Piece promoted = move.get_promoted();
+
+    move_piece(pos, move.piece, move.to, move.from);
+
+    switch (move.get_type())
+    {
+    case PROMOTION:
+        pos->pieces[promoted] &= ~bitb::sq_bitb(move.to);
+        break;
+    case PROMOTION_CAPTURE:
+        pos->pieces[promoted] &= ~bitb::sq_bitb(move.to);
+    [[fallthrough]];
+    case CAPTURE:
+        pos->pieces[captured] |= bitb::sq_bitb(move.to);
+        pos->squares[move.to] = captured;
+        break;
+    case EN_PASSANT:
+        pos->pieces[captured] |= bitb::sq_bitb(move.to + down);
+        pos->squares[move.to + down] = captured;
+        break;
+    case CASTLING:
+    {
+        movgen::Piece rook = get_piece_from_type(movgen::ROOK, pos->side_to_move);
+        // Short castling
+        if (((move.move_data >> 10) & 0x3) == 1)
+            move_piece(pos, rook, move.from - 1, move.to - 1);
+        else
+            move_piece(pos, rook, move.from + 1, move.to + 2);
+        break;
+    }
+    default:
+        break;
+    }
+
+    movgen::BoardHash *cur = pos->hash;
+    pos->hash = pos->hash->prev;
+
+    delete cur;
+
+    // Assign composite bitboards
+    pos->pieces[BLACK_PIECES] = pos->pieces[B_KING] | pos->pieces[B_QUEEN] |
+                                pos->pieces[B_ROOK] | pos->pieces[B_BISHOP] |
+                                pos->pieces[B_KNIGHT] | pos->pieces[B_PAWN];
+    pos->pieces[WHITE_PIECES] = pos->pieces[W_KING] | pos->pieces[W_QUEEN] |
+                                pos->pieces[W_ROOK] | pos->pieces[W_BISHOP] |
+                                pos->pieces[W_KNIGHT] | pos->pieces[W_PAWN];
+    pos->pieces[ALL_PIECES] = pos->pieces[BLACK_PIECES] | pos->pieces[WHITE_PIECES];
 }
 
 bool is_legal(movgen::BoardPosition &pos, movgen::Move move)
@@ -596,8 +699,8 @@ bool is_legal(movgen::BoardPosition &pos, movgen::Move move)
     else if (move.get_type() == movgen::CASTLING)
     {
         // Check that no square inbetween are under attack
-        bitboard rook_sq = from > to ? from - 3 : from + 4;
-        return !(pos.info->attacked & bitb::Between_in[from][rook_sq]);
+        bitboard end_sq = from > to ? from - 2 : from + 2;
+        return !(pos.info->attacked & bitb::Between[from][end_sq]);
     }
     else if (get_piece_type(movgen::get_piece(pos, move.from)) == movgen::KING)
     {
@@ -635,8 +738,8 @@ inline void make_promotions(std::vector<movgen::Move> *move_arr, bpos to, unsign
 
 void move_piece(movgen::BoardPosition *pos, movgen::Piece piece, bpos from, bpos to)
 {
-    pos->pieces[piece] &= ~(1ull << from);
-    pos->pieces[piece] |= (1ull << to);
+    pos->pieces[piece] &= ~bitb::sq_bitb(from);
+    pos->pieces[piece] |= bitb::sq_bitb(to);
 
     pos->squares[from] = movgen::NO_PIECE;
     pos->squares[to] = piece;

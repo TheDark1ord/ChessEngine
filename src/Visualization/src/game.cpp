@@ -63,7 +63,16 @@ void Chess::handle_event(sf::Event ev)
         case sf::Keyboard::F:
             board->flip_board();
             break;
+        case sf::Keyboard::Left:
+            if (!prev_moves.empty())
+            {
+                movgen::undo_move(&position, prev_moves.top());
+                cur_moves = position.side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(position) : movgen::generate_all_moves<movgen::BLACK>(position);
+                cur_moves = movgen::get_legal_moves(position, *cur_moves);
 
+                prev_moves.pop();
+            }
+            break;
         default:
             break;
         }
@@ -86,7 +95,8 @@ void Chess::handle_event(sf::Event ev)
                 {
                     if (move.to == board->get_selected_square())
                     {
-                        auto game_status = movgen::make_move(&position, move, &hashed_positions, &cur_moves);
+                        auto game_status = movgen::make_move(&position, move, &cur_moves);
+                        prev_moves.push(move);
                         board->deselect_square();
 
                         switch (game_status)

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <chrono>
+#include <stack>
 
 #include "draw_board.hpp"
 #include "event_handler.hpp"
@@ -31,7 +32,8 @@ private:
     Board *board;
 
     movgen::BoardPosition position;
-    std::unordered_set<movgen::BoardHash> hashed_positions;
+
+    std::stack<movgen::Move> prev_moves;
 
     std::vector<movgen::Move>* cur_moves;
     std::vector<movgen::Move> selected_piece_moves;
