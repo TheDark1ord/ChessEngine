@@ -1,5 +1,6 @@
 #include "../include/Bitboard.h"
 #include "../include/MagicNumbers.h"
+#include <cassert>
 
 bitboard bitb::Line[64][64];
 bitboard bitb::Between[64][64];
@@ -41,25 +42,13 @@ void bitb::init()
 
 std::vector<bpos> bitb::bitscan(bitboard board)
 {
-    // https://www.chessprogramming.org/BitScan#Bitscan_by_Modulo
-    static constexpr int lookup67[68] = {
-        64, 0, 1, 39, 2, 15, 40, 23,
-        3, 12, 16, 59, 41, 19, 24, 54,
-        4, -1, 13, 10, 17, 62, 60, 28,
-        42, 30, 20, 51, 25, 44, 55, 47,
-        5, 32, -1, 38, 14, 22, 11, 58,
-        18, 53, 63, 9, 61, 27, 29, 50,
-        43, 46, 31, 37, 21, 57, 52, 8,
-        26, 49, 45, 36, 56, 7, 48, 35,
-        6, 34, 33, -1};
-
     std::vector<bpos> set_bits;
     // TODO: Test optimal reserve number or even better update to better algorithm
     set_bits.reserve(8);
 
     while (board != 0)
     {
-        set_bits.push_back(lookup67[(board & (~board + 1)) % 67]);
+        set_bits.push_back(pop_lsb(board));
         board &= board - 1;
     }
 
@@ -68,18 +57,36 @@ std::vector<bpos> bitb::bitscan(bitboard board)
 
 bpos bitb::pop_lsb(bitboard board)
 {
-    // https://www.chessprogramming.org/BitScan#Bitscan_by_Modulo
-    static constexpr int lookup67[68] = {
-        64, 0, 1, 39, 2, 15, 40, 23,
-        3, 12, 16, 59, 41, 19, 24, 54,
-        4, -1, 13, 10, 17, 62, 60, 28,
-        42, 30, 20, 51, 25, 44, 55, 47,
-        5, 32, -1, 38, 14, 22, 11, 58,
-        18, 53, 63, 9, 61, 27, 29, 50,
-        43, 46, 31, 37, 21, 57, 52, 8,
-        26, 49, 45, 36, 56, 7, 48, 35,
-        6, 34, 33, -1};
-    return lookup67[(board & (~board + 1)) % 67];
+    assert(board);
+
+#if defined(__GNUC__)  // GCC, Clang, ICX
+
+    return bpos(__builtin_ctzll(board));
+
+#elif defined(_MSC_VER)
+#ifdef _WIN64  // MSVC, WIN64
+
+    unsigned long idx;
+    _BitScanForward64(&idx, board);
+    return bpos(idx);
+
+#else  // MSVC, WIN32
+    unsigned long idx;
+
+    if (b & 0xffffffff)
+    {
+        _BitScanForward(&idx, int32_t(board);
+        return Square(idx);
+    }
+    else
+    {
+        _BitScanForward(&idx, int32_t(board >> 32));
+        return bpos(idx + 32);
+    }
+#endif
+#else  // Compiler is neither GCC nor MSVC compatible
+#error "Compiler not supported."
+#endif
 }
 
 unsigned char bitb::bit_count(bitboard board)
