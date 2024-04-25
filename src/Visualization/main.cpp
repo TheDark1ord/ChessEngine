@@ -8,12 +8,12 @@
 #include "headers/game.h"
 #include <iostream>
 #include <thread>
+#include <string>
 
 /// @brief Catch and process all thrown exceptions, that bubble past main
 void terminate_func();
 
-int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
-                   LPSTR lpszArgument, int nCmdShow)
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 #ifndef NDEBUG
     // Show console in debug mode
@@ -31,7 +31,8 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
 
     try
     {
-        Chess chess({1000, 1000});
+        //Chess chess({ 1000, 1000 });
+        Chess chess({1000, 1000}, "rnbB1k1r/pp1P1ppp/2pb4/8/2B5/8/PPP1NnPP/RN1QK2R b KQ - 0 9");
         chess.loop();
     }
     catch (std::exception ex)

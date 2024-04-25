@@ -20,7 +20,7 @@ namespace bitb
     extern std::atomic_bool initialized;
 
     constexpr void set_bit(bitboard *b, bpos pos) { *b |= 1ull << pos; }
-    constexpr void clear_bit(bitboard *b, bpos pos) { *b |= ~(1ull << pos); }
+    constexpr void clear_bit(bitboard *b, bpos pos) { *b &= ~(1ull << pos); }
     constexpr void flip_bit(bitboard *b, bpos pos) { *b ^= 1ull << pos; }
     constexpr bool read_bit(bitboard &b, bpos pos) { return b & (1ull << pos); }
 

@@ -9,9 +9,11 @@ movgen::BoardHash::BoardHash(BoardPosition &pos)
 {
 }
 
-movgen::BoardHash::BoardHash(BoardHash *prev)
+movgen::BoardHash::BoardHash(BoardHash *&prev)
 {
-    std::memcpy(this, prev, sizeof(movgen::BoardHash));
+    this->castling_rights = prev->castling_rights;
+    this->en_passant = prev->en_passant;
+    this->key = prev->key;
     this->prev = prev;
 }
 
@@ -38,7 +40,7 @@ movgen::BoardPosition movgen::board_from_fen(std::string fen)
         throw std::runtime_error("Invalid fen string");
     }
 
-    movgen::BoardPosition return_pos;
+    movgen::BoardPosition return_pos = {};
 
     for (unsigned int i = 0; i < movgen::PIECE_NB; i++)
         return_pos.pieces[i] = 0;
@@ -194,15 +196,14 @@ EnPassant:
     }
     else
     {
-        return_pos.hash->en_passant = (fen[it] - 'a') + (fen[it + 1] - '1') * 8;
+        return_pos.hash->en_passant = ('h' - fen[it]) + (fen[it + 1] - '1') * 8;
         it++;
     }
     // Test that en passant square is on 3rd or 6th row
     // TODO: possible bug here(maybe should sub 1 from return_pos.en_passant)
-    if (bitb::sq_bitb(return_pos.hash->en_passant) & (bitb::Rank[2] | bitb::Rank[5]))
-    {
-        throw std::runtime_error("Invalid position");
-    }
+    if (return_pos.hash->en_passant > 0)
+        if (!(bitb::sq_bitb(return_pos.hash->en_passant) & (bitb::Rank[2] | bitb::Rank[5])))
+            throw std::runtime_error("Invalid position");
 
     while (it != (fen.size() - 1) && fen[++it] == ' ')
     {
@@ -215,6 +216,11 @@ EnPassant:
         {
         }
         return_pos.fullmove = fen[it] - '0';
+    }
+    else
+    {
+        return_pos.hash->ply = 0;
+        return_pos.fullmove = 0;
     }
 
     return_pos.hash->key = zobrist::hash(return_pos, return_pos.hash);
@@ -287,7 +293,7 @@ movgen::Piece movgen::Move::get_captured() const
         return static_cast<movgen::Piece>(this->move_data & 0x0F);
 }
 
-movgen::Piece movgen::Move::get_promoted() const
+movgen::PieceType movgen::Move::get_promoted() const
 {
-    return static_cast<movgen::Piece>((this->move_data >> 4) & 0x0F);
+    return static_cast<movgen::PieceType>((this->move_data >> 4) & 0x0F);
 }

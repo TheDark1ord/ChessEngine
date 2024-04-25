@@ -1,3 +1,6 @@
+#ifndef ZOBRIST_H
+#define ZOBRIST_H
+
 #include "MovgenTypes.h"
 
 namespace zobrist
@@ -21,3 +24,5 @@ namespace zobrist
     void init();
     uint64_t hash(const movgen::BoardPosition &pos, const movgen::BoardHash &hash);
 }
+
+#endif // !ZOBRIST_H

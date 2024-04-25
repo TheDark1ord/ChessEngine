@@ -152,7 +152,7 @@ void movgen::generate_pawn_moves(BoardPosition &pos, std::vector<Move> *generate
     {
         bitboard left_capture_prom = bitb::shift<forward_left>(prom_pawns) & pos.pieces[BLACK_PIECES + them];
         bitboard right_capture_prom = bitb::shift<forward_right>(prom_pawns) & pos.pieces[BLACK_PIECES + them];
-        bitboard push_prom = bitb::shift<forward>(prom_pawns) & ~pos.pieces[BLACK_PIECES + them];
+        bitboard push_prom = bitb::shift<forward>(prom_pawns) & ~pos.pieces[ALL_PIECES];
 
         for (auto move_to : bitb::bitscan(left_capture_prom))
             make_promotions<color, forward_left>(generated, move_to, get_piece(pos, move_to));
@@ -219,6 +219,8 @@ void movgen::get_checkers(BoardPosition &pos, PositionInfo *info)
     constexpr unsigned int us = 8 - them;
     const bpos king_pos = bitb::pop_lsb(pos.pieces[B_KING + us]);
 
+    constexpr bitb::Direction back = us == movgen::WHITE ? bitb::DOWN : bitb::UP;
+
     bitboard king_sliding = get_pseudo_attacks<BISHOP>(king_pos, pos.pieces[ALL_PIECES]);
     bitboard bishop_checkers = king_sliding & (pos.pieces[B_BISHOP + them] | pos.pieces[B_QUEEN + them]);
 
@@ -245,6 +247,10 @@ void movgen::get_checkers(BoardPosition &pos, PositionInfo *info)
     bitboard king_move = bitb::shift<forward_left>(pos.pieces[B_KING + us]) | bitb::shift<forward_right>(pos.pieces[B_KING + us]);
     bitboard pawn_checkers = king_move & pos.pieces[B_PAWN + them];
 
+    // If it is possible to capture the checking pawn with en_passant, add en passant square to blockers board
+    if (pos.hash->en_passant > 0 && (bitb::shift<back>(pawn_checkers) & bitb::sq_bitb(pos.hash->en_passant)))
+        bitb::set_bit(&info->blockers, pos.hash->en_passant);
+
     info->checkers |= bishop_checkers;
     info->checkers |= rook_checkers;
     info->checkers |= knight_checkers;
@@ -266,8 +272,8 @@ void movgen::get_pinners(BoardPosition &pos, PositionInfo *info)
     constexpr unsigned int them = 8 * them_c;
     constexpr unsigned int us = 8 - them;
     // Direction in which a pawn advances
-    constexpr bitb::Direction forward = them_c == WHITE ? bitb::UP : bitb::DOWN;
-    constexpr bitb::Direction back = them_c == WHITE ? bitb::DOWN : bitb::UP;
+    constexpr bitb::Direction forward = them_c == BLACK ? bitb::UP : bitb::DOWN;
+    constexpr bitb::Direction back = them_c == BLACK ? bitb::DOWN : bitb::UP;
     constexpr bitb::Direction back_left = static_cast<bitb::Direction>(back + bitb::LEFT);
     constexpr bitb::Direction back_right = static_cast<bitb::Direction>(back + bitb::RIGHT);
 
@@ -283,9 +289,13 @@ void movgen::get_pinners(BoardPosition &pos, PositionInfo *info)
         if (get_piece(pos, pin) == (B_BISHOP + them) ||
             get_piece(pos, pin) == (B_QUEEN + them))
         {
-            PositionInfo::Pin new_pin;
+            bitboard candidate = pos.pieces[BLACK_PIECES + us] & bitb::Between_in[king_pos][pin];
 
-            new_pin.pinned = bitb::pop_lsb(pos.pieces[BLACK_PIECES + us] & bitb::Between_in[king_pos][pin]);
+            if (candidate == 0)
+                continue;
+
+            PositionInfo::Pin new_pin;
+            new_pin.pinned = bitb::pop_lsb(candidate);
             new_pin.pinner = pin;
             new_pin.mask = bitb::Between[king_pos][new_pin.pinner];
 
@@ -301,9 +311,14 @@ void movgen::get_pinners(BoardPosition &pos, PositionInfo *info)
         if (get_piece(pos, pin) == (B_ROOK + them) ||
             get_piece(pos, pin) == (B_QUEEN + them))
         {
+            bitboard candidate = pos.pieces[BLACK_PIECES + us] & bitb::Between_in[king_pos][pin];
+
+            if (candidate == 0)
+                continue;
+
             PositionInfo::Pin new_pin;
 
-            new_pin.pinned = bitb::pop_lsb(pos.pieces[BLACK_PIECES + us] & bitb::Between_in[king_pos][pin]);
+            new_pin.pinned = bitb::pop_lsb(candidate);
             new_pin.pinner = pin;
             new_pin.mask = bitb::Between[king_pos][pin];
 
@@ -316,25 +331,28 @@ void movgen::get_pinners(BoardPosition &pos, PositionInfo *info)
     // Check for en passant pin
     if (pos.hash->en_passant != 0)
     {
+        bitboard enp_board = bitb::sq_bitb(pos.hash->en_passant);
         // If the king is not on the same rank as the pawns, en passant pin is impossible
-        if (bitb::shift<forward>(bitb::sq_rank(king_pos)) == bitb::sq_rank(pos.hash->en_passant))
+        if (bitb::sq_rank(king_pos) & bitb::shift<back>(enp_board))
         {
-            bitboard left_pawn = bitb::shift<back_left>(bitb::sq_bitb(pos.hash->en_passant));
+            bitboard en_passant_pawn = bitb::shift<back>(enp_board);
+
+            bitboard left_pawn = bitb::shift<back_left>(enp_board);
             if (left_pawn & pos.pieces[B_PAWN + us])
             {
-                bitboard wo_left = pos.pieces[ALL_PIECES] ^ left_pawn;
+                bitboard wo_left = pos.pieces[ALL_PIECES] ^ left_pawn ^ en_passant_pawn;
                 bitboard pinner_mask = movgen::get_pseudo_attacks<movgen::PieceType::ROOK>(king_pos, wo_left) & bitb::sq_rank(king_pos);
                 if (pinner_mask & (pos.pieces[B_QUEEN + them] | pos.pieces[B_ROOK + them]))
-                    info->en_passant_pin = 0;
+                    info->en_passant_pin = 1;
             }
 
-            bitboard right_pawn = bitb::shift<back_right>(bitb::sq_bitb(pos.hash->en_passant));
+            bitboard right_pawn = bitb::shift<back_right>(enp_board);
             if (&pos.pieces[B_PAWN + us])
             {
-                bitboard wo_right = pos.pieces[ALL_PIECES] ^ right_pawn;
+                bitboard wo_right = pos.pieces[ALL_PIECES] ^ right_pawn ^ en_passant_pawn;
                 bitboard pinner_mask = movgen::get_pseudo_attacks<movgen::PieceType::ROOK>(king_pos, wo_right) & bitb::sq_rank(king_pos);
                 if (pinner_mask & (pos.pieces[B_QUEEN + them] | pos.pieces[B_ROOK + them]))
-                    info->en_passant_pin = 0;
+                    info->en_passant_pin = 1;
             }
         }
     }
@@ -425,8 +443,10 @@ std::vector<movgen::Move> *movgen::get_legal_moves(BoardPosition &pos, std::vect
     {
         for (Move move : generated)
         {
+            if (bitb::sq_bitb(move.from) & pos.info->pin_board)
+                continue;
             if ((move.from == ksq && move.get_type() != CASTLING && is_legal(pos, move)) ||
-                (move.from != ksq && (1ull << move.to) & pos.info->blockers))
+                (move.from != ksq && bitb::sq_bitb(move.to) & pos.info->blockers))
             {
                 legal_moves->push_back(move);
             }
@@ -447,7 +467,10 @@ std::vector<movgen::Move> *movgen::get_legal_moves(BoardPosition &pos, std::vect
 movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move> **new_moves)
 {
     const bitb::Direction down = pos->side_to_move == movgen::WHITE ? bitb::DOWN : bitb::UP;
+    const movgen::CastlingRights castling = pos->side_to_move == movgen::WHITE ? movgen::WHITE_CASTLE : movgen::BLACK_CASTLE;
+
     const movgen::Color cur_color = pos->side_to_move;
+    const uint16_t us = cur_color == movgen::BLACK ? 8 : 0;
     const uint16_t them = cur_color == movgen::BLACK ? 0 : 8;
 
     const movgen::Piece captured = move.get_type() == movgen::EN_PASSANT ? static_cast<movgen::Piece>(movgen::B_PAWN + them) : movgen::get_piece(*pos, move.to);
@@ -455,7 +478,7 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
     pos->hash = new BoardHash(pos->hash);
     pos->hash->key ^= zobrist::side;
 
-    // Flip the color
+    // Flip the color&
     pos->side_to_move = static_cast<movgen::Color>(!pos->side_to_move);
     if (pos->side_to_move == movgen::WHITE)
         pos->fullmove++;
@@ -482,7 +505,7 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
     // Fallthrough
     case PROMOTION:
     {
-        const char prom = (move.move_data >> 4) & 0xF;
+        movgen::PieceType prom = move.get_promoted();
         assert(2 <= prom && prom < 6);
         const movgen::Piece new_piece = get_piece_from_type(
             static_cast<movgen::PieceType>(prom), cur_color);
@@ -557,32 +580,27 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
                                 pos->pieces[W_KNIGHT] | pos->pieces[W_PAWN];
     pos->pieces[ALL_PIECES] = pos->pieces[BLACK_PIECES] | pos->pieces[WHITE_PIECES];
 
-    if (movgen::get_piece_type(move.piece) == movgen::KING)
+    if (pos->hash->castling_rights & castling)
     {
-        movgen::CastlingRights castling_change = cur_color == movgen::WHITE ? movgen::WHITE_CASTLE : movgen::BLACK_CASTLE;
-
-        if (pos->hash->castling_rights & castling_change)
+        if (movgen::get_piece_type(move.piece) == movgen::KING)
         {
             pos->hash->ply = 0;
-            pos->hash->key ^= zobrist::castling[castling_change];
-            pos->hash->castling_rights ^= castling_change;
+            pos->hash->key ^= zobrist::castling[castling];
+            pos->hash->castling_rights ^= castling;
         }
-    }
-    else if (movgen::get_piece_type(move.piece) == movgen::ROOK)
-    {
-        movgen::CastlingRights castling_change;
-        // h rank rook
-        if (pos->pieces[move.piece] & bitb::File[0])
-            castling_change = cur_color == WHITE ? movgen::WHITE_SHORT : BLACK_SHORT;
-        // a rank rook
-        else if (pos->pieces[move.piece] & bitb::File[7])
-            castling_change = cur_color == WHITE ? movgen::WHITE_LONG : BLACK_LONG;
-
-        if (pos->hash->castling_rights & castling_change)
+        else if (movgen::get_piece_type(move.piece) == movgen::ROOK)
         {
+            movgen::CastlingRights castling_change = movgen::NO_CASTLING;
+            // h rank rook
+            if (bitb::sq_bitb(move.from) & bitb::File[7])
+                castling_change = static_cast<movgen::CastlingRights>(castling & movgen::SHORT);
+            // a rank rook
+            else if (bitb::sq_bitb(move.from) & bitb::File[0])
+                castling_change = static_cast<movgen::CastlingRights>(castling & movgen::LONG);
+
             pos->hash->ply = 0;
             pos->hash->key ^= zobrist::castling[castling_change];
-            pos->hash->castling_rights ^= castling_change;
+            pos->hash->castling_rights &= ~castling_change;
         }
     }
 
@@ -595,7 +613,7 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
         {
             hash_it = hash_it->prev;
             reps += hash_it->key == pos->hash->key;
-        } while (hash_it->ply > 0);
+        } while (hash_it->ply > 0 && hash_it->prev != nullptr);
 
         if (reps >= 3)
             return movgen::DRAW;
@@ -637,7 +655,7 @@ void movgen::undo_move(movgen::BoardPosition *pos, movgen::Move &move)
     const bitb::Direction down = pos->side_to_move == movgen::WHITE ? bitb::DOWN : bitb::UP;
 
     const movgen::Piece captured = move.get_captured();
-    const movgen::Piece promoted = move.get_promoted();
+    const movgen::Piece promoted = movgen::get_piece_from_type(move.get_promoted(), pos->side_to_move);
 
     move_piece(pos, move.piece, move.to, move.from);
 
@@ -694,6 +712,8 @@ bool is_legal(movgen::BoardPosition &pos, movgen::Move move)
 
     if (move.get_type() == movgen::EN_PASSANT)
     {
+        if (pos.info->pin_board & bitb::sq_bitb(move.from))
+            return false;
         return !(pos.info->en_passant_pin);
     }
     else if (move.get_type() == movgen::CASTLING)
