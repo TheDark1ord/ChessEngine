@@ -13,10 +13,10 @@
 const std::string fen_strings[]{
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",         // Initial position
     "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", // Kiwipete by Peter McKenzie
-    "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -",                            //
-    "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", //
-    "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", // Mirrored previous position
-    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",        //
+    "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -",                            // pos 3
+    "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", // pos 4
+    "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", // Mirrored pos 4
+    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",        // pos 5
 };
 const std::vector<uint64_t> positions_reached[]{
     {20, 400, 8902, 197281, 4865609, 119060324, 3195901860, 84998978956},
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     const std::vector<uint64_t> *pos_num = &positions_reached[test_index];
 
     movgen::BoardPosition initial_position = movgen::board_from_fen(*fen_string);
-    //movgen::BoardPosition initial_position = movgen::board_from_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R4K1R b kq - 1 1");
+    //movgen::BoardPosition initial_position = movgen::board_from_fen("r2k3r/p1ppqNb1/bn2pQp1/3P4/1p2P3/2N4p/PPPBBPPP/R3K2R b KQ - 0 2");
 
     int depth = pos_num->size();
     if (argc > 2)
@@ -63,15 +63,37 @@ int main(int argc, char *argv[])
                 movgen::generate_all_moves<movgen::BLACK>(initial_position);
     cur_moves = movgen::get_legal_moves(initial_position, *cur_moves);
 
-    for (int i = 0; i < depth; i++)
+    int initial_depth = 0;
+    for (int i = 3; i < argc; i++)
+    {
+        std::vector<movgen::Move>* new_moves = cur_moves;
+        for (auto& move : *new_moves)
+        {
+            if ((std::string(squares[move.from]) + (std::string(squares[move.to]))) == argv[i])
+            {
+                movgen::make_move(&initial_position, move, &new_moves);
+                break;
+            }
+        }
+        cur_moves = new_moves;
+
+        depth--;
+        initial_depth = depth - 1;
+    }
+
+    for (int i = initial_depth; i < depth; i++)
     {
         printf("Depth: %d\n", i + 1);
+
+        if (depth == 1)
+            for (auto& move : *cur_moves)
+                printf("%s%s: %u\n", squares[move.from], squares[move.to], 1);
 
         uint64_t counted = count_moves(initial_position, cur_moves, i + 1, true);
 
         printf("\nNodes reached: %llu\n\n", counted);
 
-        if (counted != (*pos_num)[i])
+        if (argc < 4 && counted != (*pos_num)[i])
             return -1;
     }
 
