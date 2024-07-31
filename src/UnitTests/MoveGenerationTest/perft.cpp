@@ -1,18 +1,8 @@
-<<<<<<< Updated upstream
-=======
 #include "MoveGeneration.h"
->>>>>>> Stashed changes
 #include "MovgenTypes.h"
-#include "MoveGeneration.h"
 
 #include <cstdint>
 #include <cstdlib>
-<<<<<<< Updated upstream
-#include <cstdint>
-#include <cstdlib>
-#include <string>
-=======
->>>>>>> Stashed changes
 #include <thread>
 #include <vector>
 
@@ -37,31 +27,6 @@ const std::vector<uint64_t> positions_reached[]{
 	{6, 264, 9467, 422333, 15833292, 706045033},
 	{6, 264, 9467, 422333, 15833292, 706045033},
 	{44, 1486, 62379, 2103487, 89941194},
-<<<<<<< Updated upstream
-	{20, 400, 8902, 197281, 4865609, 119060324, 3195901860, 84998978956},
-	{48, 2039, 97862, 4085603, 193690690, 8031647685},
-	{14, 191, 2812, 43238, 674624, 11030083, 178633661, 3009794393},
-	{6, 264, 9467, 422333, 15833292, 706045033},
-	{6, 264, 9467, 422333, 15833292, 706045033},
-	{44, 1486, 62379, 2103487, 89941194},
-};
-
-const char* squares[]{
-	"h1", "g1", "f1", "e1", "d1", "c1", "b1", "a1", "h2", "g2", "f2", "e2", "d2", "c2", "b2", "a2",
-	"h3", "g3", "f3", "e3", "d3", "c3", "b3", "a3", "h4", "g4", "f4", "e4", "d4", "c4", "b4", "a4",
-	"h5", "g5", "f5", "e5", "d5", "c5", "b5", "a5", "h6", "g6", "f6", "e6", "d6", "c6", "b6", "a6",
-	"h7", "g7", "f7", "e7", "d7", "c7", "b7", "a7", "h8", "g8", "f8", "e8", "d8", "c8", "b8", "a8",
-};
-
-uint64_t count_moves(movgen::BoardPosition& initial,
-					 std::vector<movgen::Move>* cur_moves,
-					 unsigned int depth,
-					 bool toplevel = false);
-
-int main(int argc, char* argv[])
-{
-	std::thread init_thread1((movgen::init));
-=======
 };
 const char* squares[]{
 	"h1", "g1", "f1", "e1", "d1", "c1", "b1", "a1", "h2", "g2", "f2", "e2", "d2", "c2", "b2", "a2",
@@ -78,7 +43,6 @@ uint64_t count_moves(movgen::BoardPosition& initial,
 int main(int argc, char* argv[])
 {
 	std::thread init_thread1(movgen::init);
->>>>>>> Stashed changes
 	std::thread init_thread2(bitb::init);
 
 	init_thread1.detach();
