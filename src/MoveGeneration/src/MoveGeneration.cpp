@@ -2,7 +2,6 @@
 #include "../include/MagicNumbers.h"
 #include "../include/Zobrist.h"
 #include <cassert>
-#include <unordered_set>
 
 bitboard movgen::knight_attacks[64];
 bitboard movgen::king_attacks[64];
@@ -379,10 +378,10 @@ void movgen::get_attacked(BoardPosition &pos, PositionInfo *info)
 }
 
 template <movgen::Color color>
-std::vector<movgen::Move> *movgen::generate_all_moves(BoardPosition &pos)
+void movgen::generate_all_moves(BoardPosition &pos, std::vector<movgen::Move>* moves)
 {
     constexpr movgen::Color col_them = movgen::Color(!color);
-    std::vector<movgen::Move> *moves = new std::vector<movgen::Move>;
+
     // TODO: Test optimal reserve number
     moves->reserve(10);
 
@@ -406,21 +405,18 @@ std::vector<movgen::Move> *movgen::generate_all_moves(BoardPosition &pos)
     get_checkers<col_them>(pos, pos.info);
     get_pinners<col_them>(pos, pos.info);
     get_attacked<col_them>(pos, pos.info);
-
-    return moves;
 }
 
-template std::vector<movgen::Move> *movgen::generate_all_moves<movgen::WHITE>(BoardPosition &pos);
-template std::vector<movgen::Move> *movgen::generate_all_moves<movgen::BLACK>(BoardPosition &pos);
+template void movgen::generate_all_moves<movgen::WHITE>(BoardPosition &pos, std::vector<movgen::Move>* moves);
+template void movgen::generate_all_moves<movgen::BLACK>(BoardPosition &pos, std::vector<movgen::Move>* moves);
 
-std::vector<movgen::Move> *movgen::get_legal_moves(BoardPosition &pos, std::vector<Move> &generated)
+void movgen::get_legal_moves(BoardPosition &pos, std::vector<Move> &generated, std::vector<movgen::Move>* legal_moves)
 {
     const Color c = pos.side_to_move;
     const unsigned int us = 8 * c;
     const bitboard pinned = pos.info->pin_board;
     const bpos ksq = bitb::pop_lsb(pos.pieces[B_KING + us]);
 
-    std::vector<Move> *legal_moves = new std::vector<Move>;
     legal_moves->reserve(generated.size());
 
     // Only king moves are possible
@@ -436,10 +432,10 @@ std::vector<movgen::Move> *movgen::get_legal_moves(BoardPosition &pos, std::vect
                 }
             }
         }
-        return legal_moves;
+        return;
     }
     // Only allow king moves and blockers
-    else if (pos.info->checks_num == 1)
+    if (pos.info->checks_num == 1)
     {
         for (Move move : generated)
         {
@@ -451,7 +447,7 @@ std::vector<movgen::Move> *movgen::get_legal_moves(BoardPosition &pos, std::vect
                 legal_moves->push_back(move);
             }
         }
-        return legal_moves;
+        return;
     }
 
     for (Move move : generated)
@@ -461,10 +457,9 @@ std::vector<movgen::Move> *movgen::get_legal_moves(BoardPosition &pos, std::vect
             is_legal(pos, move))
             legal_moves->push_back(move);
     }
-    return legal_moves;
 }
 
-movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move> **new_moves)
+movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move>* new_moves)
 {
     const bitb::Direction down = pos->side_to_move == movgen::WHITE ? bitb::DOWN : bitb::UP;
     const movgen::CastlingRights castling = pos->side_to_move == movgen::WHITE ? movgen::WHITE_CASTLE : movgen::BLACK_CASTLE;
@@ -619,21 +614,13 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
             return movgen::DRAW;
     }
 
-    if (*new_moves != nullptr)
-    {
-        std::vector<movgen::Move>().swap(**new_moves);
-        delete *new_moves;
-        *new_moves = nullptr;
-    }
+    static std::vector<movgen::Move> pseudo_legal;
+    pseudo_legal.clear();
 
-    std::vector<movgen::Move> *pseudo_legal;
-    pseudo_legal = pos->side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(*pos) : movgen::generate_all_moves<movgen::BLACK>(*pos);
-    *new_moves = movgen::get_legal_moves(*pos, *pseudo_legal);
+    pos->side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(*pos, &pseudo_legal) : movgen::generate_all_moves<movgen::BLACK>(*pos, &pseudo_legal);
+    movgen::get_legal_moves(*pos, pseudo_legal, new_moves);
 
-    std::vector<movgen::Move>().swap(*pseudo_legal); // Clear the vector
-    delete pseudo_legal;
-
-    if ((*new_moves)->size() == 0)
+    if (new_moves->size() == 0)
     {
         if (pos->info->checks_num > 0)
             return pos->side_to_move == movgen::WHITE ? movgen::BLACK_WINS : movgen::WHITE_WINS;

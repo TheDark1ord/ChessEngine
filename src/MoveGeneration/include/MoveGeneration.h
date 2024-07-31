@@ -1,7 +1,6 @@
 #ifndef MOVGEN_H
 #define MOVGEN_H
 
-#include <unordered_set>
 #include <vector>
 
 #include "Bitboard.h"
@@ -51,11 +50,11 @@ namespace movgen
     void get_attacked(BoardPosition &pos, PositionInfo *info);
 
     template <movgen::Color color>
-    std::vector<Move> *generate_all_moves(BoardPosition &pos);
+    void generate_all_moves(BoardPosition &pos, std::vector<movgen::Move>* moves);
     // Filters out non-legal moves from generated moves using PositionInfo
-    std::vector<Move> *get_legal_moves(BoardPosition &pos, std::vector<Move> &generated);
+    void get_legal_moves(BoardPosition &pos, std::vector<Move> &generated, std::vector<movgen::Move>* legal_moves);
 
-    GameStatus make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move> **new_moves);
+    GameStatus make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move> *new_moves);
     void undo_move(movgen::BoardPosition *pos, movgen::Move &move);
 } // namespace movgen
 

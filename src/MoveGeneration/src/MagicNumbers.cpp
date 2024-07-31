@@ -92,7 +92,7 @@ bitboard movgen::_generate_bishop_moves(bpos sq, bitboard blocker) {
   return attacks;
 }
 
-static bitboard movgen::_generate_rook_mask(bpos sq) {
+bitboard movgen::_generate_rook_mask(bpos sq) {
   bitboard attacks = 0;
 
   for (int y = sq / 8, x = sq % 8 - 1; x > 0; --x)

@@ -1,5 +1,4 @@
 #include <SFML/Graphics.hpp>
-#include <Windows.h>
 
 #include "MagicNumbers.h"
 #include "Bitboard.h"

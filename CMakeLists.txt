@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.23.0)
 
 #include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
-#set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
-set(CMAKE_TOOLCHAIN_FILE "C:\\Users\\rubco\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+set(CMAKE_TOOLCHAIN_FILE "/etc/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+#set(CMAKE_TOOLCHAIN_FILE "C:\\Users\\rubco\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,5 +30,5 @@ enable_testing()
 
 add_subdirectory(src/MoveGeneration)
 add_subdirectory(src/MoveEvaluation)
-add_subdirectory(src/Visualization)
+#add_subdirectory(src/Visualization)
 add_subdirectory(src/UnitTests)
