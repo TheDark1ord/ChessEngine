@@ -7,16 +7,11 @@
 #include <vector>
 
 const std::string fen_strings[]{
-	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", // Initial
-	// position
-	"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", // Kiwipete
-	// by
-	// Peter
-	// McKenzie
+	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", // Initial position
+	"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", // Kiwipete by Peter McKenzie
 	"8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", // pos 3
 	"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", // pos 4
-	"r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", // Mirrored
-	// pos 4
+	"r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", // Mirrored pos 4
 	"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", // pos 5
 };
 
@@ -63,14 +58,13 @@ int main(int argc, char* argv[])
 
 	std::vector<movgen::Move> cur_moves;
 	std::vector<movgen::Move> legal_moves;
-
 	initial_position.side_to_move == movgen::WHITE
 		? movgen::generate_all_moves<movgen::WHITE>(initial_position, &cur_moves)
 		: movgen::generate_all_moves<movgen::BLACK>(initial_position, &cur_moves);
 	movgen::get_legal_moves(initial_position, cur_moves, &legal_moves);
+	cur_moves = legal_moves;
 
-
-    // If any moves are specified as additional arguments, make that moves
+	// If any moves are specified as additional arguments, make that moves
 	int initial_depth = 0;
 	for(int i = 3; i < argc; i++)
 	{
@@ -132,7 +126,7 @@ uint64_t count_moves(movgen::BoardPosition& initial,
 				printf("%s%s: %lu\n", squares[move.from], squares[move.to], counted);
 		}
 		movgen::undo_move(&initial, move);
-        new_moves.clear();
+		new_moves.clear();
 	}
 
 	return move_count;

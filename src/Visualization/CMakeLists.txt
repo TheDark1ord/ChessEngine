@@ -24,11 +24,11 @@ target_link_libraries(chess PRIVATE NanoSVG::nanosvg NanoSVG::nanosvgrast)
 #Include SFML
 set(SFML_STATIC_LIBRARIES TRUE)
 find_package(SFML 2.6.0
-        COMPONENTS
-            system window graphics audio
-        CONFIG
-        REQUIRED
-    )
+    COMPONENTS
+    system window graphics audio
+    CONFIG
+    REQUIRED
+)
 
 target_compile_features(chess PRIVATE cxx_std_20)
 target_compile_definitions(chess PRIVATE SFML_DYNAMIC)

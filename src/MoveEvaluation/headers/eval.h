@@ -1,3 +1,6 @@
+#ifndef EVAL_H
+#define EVAL_H
+
 #include "MovgenTypes.h"
 #include <cmath>
 
@@ -23,3 +26,5 @@ static constexpr float piece_val(movgen::PieceType piece) {
 // Range: -40 -- +40
 // (-)n*e+3 -- mate in n moves
 float eval(movgen::BoardPosition &pos);
+
+#endif

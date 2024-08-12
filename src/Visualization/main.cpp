@@ -1,6 +1,5 @@
 #include <SFML/Graphics.hpp>
 
-#include "MagicNumbers.h"
 #include "Bitboard.h"
 #include "MoveGeneration.h"
 
@@ -12,16 +11,8 @@
 /// @brief Catch and process all thrown exceptions, that bubble past main
 void terminate_func();
 
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+int main()
 {
-#ifndef NDEBUG
-    // Show console in debug mode
-    AllocConsole();
-    freopen("conin$", "r", stdin);
-    freopen("conout$", "w", stdout);
-    freopen("conout$", "w", stderr);
-#endif // DEBUG
-
     std::thread init_thread1(movgen::init);
     std::thread init_thread2(bitb::init);
 

@@ -16,8 +16,8 @@ install(TARGETS MoveGeneration
 
 file(GLOB LIB_HEADERS include/*.h)
 foreach (HeaderFile IN LISTS LIB_HEADERS)
-add_custom_command(TARGET MoveGeneration POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+add_custom_command(TARGET MoveGeneration PRE_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy
         "${HeaderFile}"
         "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/include/"
     COMMENT "Copying ${HeaderFile} to include\n")

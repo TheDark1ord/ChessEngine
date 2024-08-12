@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <regex>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -202,6 +203,8 @@ namespace movgen
         MoveType get_type() const;
         Piece get_captured() const;
         PieceType get_promoted() const;
+
+        operator std::string();
     };
 
     Piece get_piece(BoardPosition &b_pos, bpos pos);
