@@ -32,10 +32,13 @@ static const char* _piece_types[]
     "P",
 };
 
+// Did not save any position
+//I do not want to use _saved_pos as pointer
 static bool _saved_pos_is_null = true;
 static movgen::BoardPosition _saved_pos;
 static std::vector<movgen::Move> _gen_moves;
 
+// Make all moves in the array if possible
 template<typename InputIterator>
 static void _make_moves(InputIterator begin, InputIterator end);
 // Generate moves for _saved_pos

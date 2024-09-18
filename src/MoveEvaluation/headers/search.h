@@ -33,4 +33,4 @@ static float __search(std::vector<movgen::Move>& gen_moves, _SearchArgs& args);
 movgen::Move get_best_move(movgen::BoardPosition& pos);
 
 // Return eval, if the game ended
-static bool check_result(movgen::GameStatus status, float* eval);
+static bool check_game_state(movgen::GameStatus status, float* eval);

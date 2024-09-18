@@ -29,6 +29,7 @@ void save_position(std::vector<std::string> args)
 	else
 	{
 		std::cout << "Please use keywords 'startpos' or 'fen' to specify position";
+		std::cout << "Position was not saved\n";
 		return;
 	}
 
@@ -39,11 +40,11 @@ void save_position(std::vector<std::string> args)
 	catch(std::runtime_error e)
 	{
 		std::cout << "Failed to construct position. Aborting\n\n";
-		std::cout << e.what() << std::endl;
-		return;
+		throw e;
 	}
 	_saved_pos_is_null = false;
 
+	// If additional moves were specified
 	if(args.size() > it && args[it] == "moves")
 	{
 		try
@@ -52,12 +53,44 @@ void save_position(std::vector<std::string> args)
 		}
 		catch(std::runtime_error e)
 		{
+			// Do not set the position
 			_saved_pos_is_null = true;
 			printf("Error: %s\n", e.what());
 		}
 	}
 }
 
+void start_search(std::vector<std::string> args)
+{
+	if(_saved_pos_is_null)
+	{
+		printf("Please initialise the position first\n");
+		return;
+	}
+
+	if (args.size() > 0)
+	{
+		if(args[0] == "depth")
+		{
+			
+		}
+		else if(args[0] == "time")
+		{
+			throw std::logic_error("Not implemented");
+		}
+		else
+		{
+			printf("Unknown argument \"%s\"", args[0].c_str());
+			return;
+		}
+	}
+	else
+	{
+		printf("Starting infinite search, type \"stop\" to stop");
+
+		throw std::logic_error("Not implemented");
+	}
+}
 
 void _make_moves(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end)
 {

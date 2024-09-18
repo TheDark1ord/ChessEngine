@@ -264,6 +264,7 @@ void Board::place_squares()
             board_offset.x + (i % 8 + 0) * (square_size),
             board_offset.y + (i / 8 + 1) * (square_size)};
 
+        //Alternate coloring for even rows and columns
         cur_col = (i % 2) ^ (i % 16 >= 8) ? board_green : board_pale;
 
         if (flipped && i == this->selected_square ||

@@ -36,7 +36,7 @@ float __search(std::vector<movgen::Move>& gen_moves, _SearchArgs& args)
 
 		auto result = movgen::make_move(args.pos, move, &new_moves);
 		// Recursion call here
-		if(!check_result(result, &score))
+		if(!check_game_state(result, &score))
 		{
 			if(type == _SearchType::MAX)
 				score = __search<_SearchType::MIN>(new_moves, args);
@@ -103,7 +103,7 @@ movgen::Move get_best_move(movgen::BoardPosition& pos,
 		movgen::GameStatus result;
 
 		result = movgen::make_move(&pos, move, &new_moves);
-		if(!check_result(result, &move_eval[it]))
+		if(!check_game_state(result, &move_eval[it]))
 			move_eval[it] = minmax_search(&pos, new_moves);
 		movgen::undo_move(&pos, move);
 
@@ -124,7 +124,7 @@ movgen::Move get_best_move(movgen::BoardPosition& pos,
 	return (*gen_moves)[max_index];
 }
 
-bool check_result(movgen::GameStatus status, float* eval)
+bool check_game_state(movgen::GameStatus status, float* eval)
 {
 	switch(status)
 	{

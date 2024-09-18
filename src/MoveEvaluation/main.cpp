@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -8,6 +9,8 @@
 
 constexpr uint16_t TABLE_SIZE = 3;
 
+
+// Struct that is used to call functions from cmd
 struct CommandStruct
 {
     const char* command;
@@ -38,18 +41,30 @@ int main() {
         static std::string line;
 
         std::cin >> line;
-        auto split_line = split_string(line, " ");
-        auto command = split_line[0];
+        std::vector<std::string> split_line = split_string(line, " ");
+
+        // Firs argument is commend name, the rest are cmd argument for a function
+        std::string command = split_line[0];
         auto args = std::vector<std::string>(split_line.begin() + 1, split_line.end());
 
+        // Iterate through command aliases and call the corresponding function
 		for(int i = 0; i < TABLE_SIZE; i++)
 		{
 			if(command == commandTable[i].command)
 			{
-				commandTable[i].commandHandler(args);
-				break;
+                try {
+				    commandTable[i].commandHandler(args);
+                } catch (std::exception e) {
+                    std::cout << e.what() << std::endl;
+                }
+                // Break out of the loop and skip not found statement
+				goto LoopEnd;
 			}
 		}
+        // Command was not found (did not break from the loop)
+        printf("\"%s\" was not found", command.c_str());
+    LoopEnd:
+        continue;
 	}
 
     return 0;
