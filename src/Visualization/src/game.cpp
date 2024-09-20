@@ -1,4 +1,5 @@
 #include "../headers/game.h"
+#include <thread>
 
 Chess::Chess(sf::Vector2u window_size)
     : Chess(window_size, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")

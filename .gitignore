@@ -4,8 +4,11 @@ build/
 lib/
 
 .*
+!.clang-format
+
 tags
 
 out/
 
 vcpkg_installed/
+CMakePresets.json

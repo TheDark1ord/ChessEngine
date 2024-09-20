@@ -40,5 +40,7 @@ void handle_event(sf::Event ev, sf::RenderWindow *window)
         // TODO: Fix this
 
         break;
+    default:
+        break;
     }
 }

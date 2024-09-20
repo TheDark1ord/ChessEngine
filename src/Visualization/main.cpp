@@ -1,5 +1,4 @@
 #include <SFML/Graphics.hpp>
-#include <Windows.h>
 
 #include "MagicNumbers.h"
 #include "Bitboard.h"
@@ -13,16 +12,8 @@
 /// @brief Catch and process all thrown exceptions, that bubble past main
 void terminate_func();
 
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+int main()
 {
-#ifndef NDEBUG
-    // Show console in debug mode
-    AllocConsole();
-    freopen("conin$", "r", stdin);
-    freopen("conout$", "w", stdout);
-    freopen("conout$", "w", stderr);
-#endif // DEBUG
-
     std::thread init_thread1(movgen::init);
     std::thread init_thread2(bitb::init);
 
@@ -60,7 +51,6 @@ void terminate_func()
         std::cerr << typeid(std::current_exception()).name() << std::endl;
         std::cerr << " ...something, not an exception, dunno what." << std::endl;
     }
-    MessageBox(NULL, "Failed due to an exception", "Error", MB_OK);
     std::cerr << "errno: " << errno << ": " << std::strerror(errno) << std::endl;
     std::abort();
 }
