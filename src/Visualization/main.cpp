@@ -22,8 +22,7 @@ int main()
 
     try
     {
-        //Chess chess({ 1000, 1000 });
-        Chess chess({1000, 1000}, "rnbB1k1r/pp1P1ppp/2pb4/8/2B5/8/PPP1NnPP/RN1QK2R b KQ - 0 9");
+        Chess chess({ 1000, 1000 });
         chess.loop();
     }
     catch (std::exception ex)
