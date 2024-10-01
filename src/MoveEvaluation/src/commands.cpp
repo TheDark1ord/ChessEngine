@@ -1,4 +1,6 @@
 #include "../headers/commands.h"
+#include "../headers/search.h"
+
 #include "MoveGeneration.h"
 #include "MovgenTypes.h"
 #include <cstddef>
@@ -6,91 +8,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-
-void save_position(std::vector<std::string> args)
-{
-	if(args.empty())
-	{
-		std::cout << "Please provide position string as argument";
-		return;
-	}
-
-	size_t it = 0;
-	std::string fen;
-	if(args[0] == "startpos")
-	{
-		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-	}
-	else if(args[0] == "fen")
-	{ // Fen string contains spaces so we have to concatenate these strings
-		for(it = 1; it < args.size() && args[it] != "moves"; it++)
-			fen.append(args[it]);
-	}
-	else
-	{
-		std::cout << "Please use keywords 'startpos' or 'fen' to specify position";
-		std::cout << "Position was not saved\n";
-		return;
-	}
-
-	try
-	{
-		_saved_pos = movgen::board_from_fen(args[0]);
-	}
-	catch(std::runtime_error e)
-	{
-		std::cout << "Failed to construct position. Aborting\n\n";
-		throw e;
-	}
-	_saved_pos_is_null = false;
-
-	// If additional moves were specified
-	if(args.size() > it && args[it] == "moves")
-	{
-		try
-		{
-			_make_moves(args.begin() + it + 1, args.end());
-		}
-		catch(std::runtime_error e)
-		{
-			// Do not set the position
-			_saved_pos_is_null = true;
-			printf("Error: %s\n", e.what());
-		}
-	}
-}
-
-void start_search(std::vector<std::string> args)
-{
-	if(_saved_pos_is_null)
-	{
-		printf("Please initialise the position first\n");
-		return;
-	}
-
-	if (args.size() > 0)
-	{
-		if(args[0] == "depth")
-		{
-			
-		}
-		else if(args[0] == "time")
-		{
-			throw std::logic_error("Not implemented");
-		}
-		else
-		{
-			printf("Unknown argument \"%s\"", args[0].c_str());
-			return;
-		}
-	}
-	else
-	{
-		printf("Starting infinite search, type \"stop\" to stop");
-
-		throw std::logic_error("Not implemented");
-	}
-}
 
 void _make_moves(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end)
 {
@@ -139,10 +56,104 @@ void _make_moves(std::vector<std::string>::iterator begin, std::vector<std::stri
 	_gen_moves = cur_moves;
 }
 
+void save_position(std::vector<std::string> args)
+{
+	if(args.empty())
+	{
+		std::cout << "Please provide position string as an argument" << std::endl;
+		return;
+	}
+
+	size_t it = 0;
+	std::string fen;
+	if(args[0] == "startpos")
+	{
+		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	}
+	else if(args[0] == "fen")
+	{ // Fen string contains spaces so we have to concatenate these strings
+		for(it = 1; it < args.size() && args[it] != "moves"; it++)
+			fen.append(args[it]);
+	}
+	else
+	{
+		std::cout << "Please use keywords 'startpos' or 'fen' to specify position" << std::endl;
+		std::cout << "Position was not saved" << std::endl;
+		return;
+	}
+
+	try
+	{
+		_saved_pos = movgen::board_from_fen(fen);
+	}
+	catch(std::runtime_error e)
+	{
+		std::cout << "Failed to construct position. Aborting\n" << std::endl;
+		throw e;
+	}
+	_saved_pos_is_null = false;
+
+	// If additional moves were specified
+	if(args.size() > it && args[it] == "moves")
+	{
+		try
+		{
+            _make_moves(args.begin() + it + 1, args.end());
+		}
+		catch(std::runtime_error e)
+		{
+			// Do not set the position
+			_saved_pos_is_null = true;
+			printf("Error: %s\n", e.what());
+		}
+	}
+
+	_gen_moves.clear();
+	_gen_moves = _generate_moves();
+}
+
+void start_search(std::vector<std::string> args)
+{
+	if(_saved_pos_is_null)
+	{
+		printf("Please initialise the position first\n");
+		return;
+	}
+
+	if (args.size() > 0)
+	{
+		if(args[0] == "depth")
+		{
+			if (args.size() < 2)
+				throw std::runtime_error("Please provide a depth value");
+			auto best_move = get_best_move(&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
+			printf("%s\n", std::string(best_move).c_str());
+			//minmax_search(&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
+		}
+		else if(args[0] == "time")
+		{
+			if (args.size() < 2)
+				throw std::runtime_error("Please provide a time value");
+			throw std::logic_error("Not implemented");
+		}
+		else
+		{
+			printf("Unknown argument \"%s\"\n", args[0].c_str());
+			return;
+		}
+	}
+	else
+	{
+		printf("Starting infinite search, type \"stop\" to stop\n");
+
+		throw std::logic_error("Not implemented");
+	}
+}
+
 std::vector<movgen::Move> _generate_moves()
 {
 	if(_saved_pos_is_null)
-		throw std::runtime_error("Please initialise a position");
+		throw std::runtime_error("Please initialise a position\n");
 
 	std::vector<movgen::Move> pseudo_moves;
 	std::vector<movgen::Move> legal_moves;
@@ -155,5 +166,4 @@ std::vector<movgen::Move> _generate_moves()
 	return legal_moves;
 }
 
-void start_search(std::vector<std::string> args) { }
 void start_perft(std::vector<std::string> args) { }

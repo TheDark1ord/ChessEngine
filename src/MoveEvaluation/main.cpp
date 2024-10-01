@@ -4,18 +4,19 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "headers/commands.h"
+#include "MoveGeneration.h"
 
 constexpr uint16_t TABLE_SIZE = 3;
-
 
 // Struct that is used to call functions from cmd
 struct CommandStruct
 {
     const char* command;
     void (*commandHandler)(std::vector<std::string> args);
-} commandTable[] = {
+} commandTable[TABLE_SIZE] = {
     { "position", save_position },
     { "search", start_search },
     { "perft", start_perft }
@@ -31,41 +32,50 @@ std::vector<std::string> split_string(std::string str, std::string delim)
         ret_vec.push_back(str.substr(0, pos));
         str.erase(0, pos + delim.length());
     }
+    ret_vec.push_back(str);
 
     return ret_vec;
 }
 
 int main() {
+    std::thread init_thread1(movgen::init);
+	std::thread init_thread2(bitb::init);
+
+    printf("Initializing...\n");
+	init_thread1.detach();
+	init_thread2.join();
+    printf("Engine is ready, input a command\n");
+
     while(true)
     {
         static std::string line;
 
-        std::cin >> line;
+        std::getline(std::cin, line);
         std::vector<std::string> split_line = split_string(line, " ");
 
-        // Firs argument is commend name, the rest are cmd argument for a function
+        // Firs argument is command name, the rest are cmd arguments for a function
         std::string command = split_line[0];
         auto args = std::vector<std::string>(split_line.begin() + 1, split_line.end());
 
         // Iterate through command aliases and call the corresponding function
-		for(int i = 0; i < TABLE_SIZE; i++)
-		{
-			if(command == commandTable[i].command)
-			{
+        for(int i = 0; i < TABLE_SIZE; i++)
+        {
+            if(command == commandTable[i].command)
+            {
                 try {
-				    commandTable[i].commandHandler(args);
+                    commandTable[i].commandHandler(args);
                 } catch (std::exception e) {
                     std::cout << e.what() << std::endl;
                 }
                 // Break out of the loop and skip not found statement
-				goto LoopEnd;
-			}
-		}
+                goto LoopEnd;
+            }
+        }
         // Command was not found (did not break from the loop)
-        printf("\"%s\" was not found", command.c_str());
+        printf("Command \"%s\" was not found\n", command.c_str());
     LoopEnd:
         continue;
-	}
+    }
 
     return 0;
 }

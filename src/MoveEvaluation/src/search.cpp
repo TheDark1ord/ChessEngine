@@ -7,126 +7,103 @@
 #include <cstdint>
 #include <vector>
 
-float minmax_search(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves)
+float minmax_search(movgen::BoardPosition *pos, std::vector<movgen::Move> &gen_moves, uint16_t depth = 5)
 {
-	_SearchArgs args(pos, 5);
-	return __search<_SearchType::MAX>(gen_moves, args);
+	return __minimax<_SearchType::MAX>(pos, gen_moves, depth, -INFINITY, INFINITY);
 }
 
 template <_SearchType type>
-float __search(std::vector<movgen::Move>& gen_moves, _SearchArgs& args)
+float __minimax(movgen::BoardPosition *pos, std::vector<movgen::Move> &gen_moves, uint16_t depth, float alpha, float beta)
 {
-	if(args.depth == 0)
+	float score;
+	if (eval_if_game_ended(pos, gen_moves, &score))
+		return score;
+	if (depth == 0)
 	{
-		if(type == _SearchType::MAX)
-			return eval(*args.pos);
+		if (type == _SearchType::MAX)
+			return eval(*pos);
 		else
-			return -eval(*args.pos);
+			return -eval(*pos);
 	}
 
-	float best_value = (type == _SearchType::MAX ? INT_MIN : INT_MAX);
-	//Update depth
-	args.depth--;
+	float best_value = (type == _SearchType::MAX ? -INFINITY : INFINITY);
 
 	std::vector<movgen::Move> new_moves;
-	float score;
-	for(auto& move : gen_moves)
+	for (auto &move : gen_moves)
 	{
 		new_moves.clear();
+		movgen::make_move(pos, move, &new_moves);
 
-		auto result = movgen::make_move(args.pos, move, &new_moves);
 		// Recursion call here
-		if(!check_game_state(result, &score))
-		{
-			if(type == _SearchType::MAX)
-				score = __search<_SearchType::MIN>(new_moves, args);
-			else
-				score = __search<_SearchType::MAX>(new_moves, args);
+		if (type == _SearchType::MAX)
+			score = __minimax<_SearchType::MIN>(pos, new_moves, depth - 1, alpha, beta);
+		else
+			score = __minimax<_SearchType::MAX>(pos, new_moves, depth - 1, alpha, beta);
+		movgen::undo_move(pos, move);
 
-			// Revert depth
-			args.depth++;
-		}
-		movgen::undo_move(args.pos, move);
-
-		if(type == _SearchType::MAX)
+		if (type == _SearchType::MAX)
 		{
-			if(score > best_value)
+			if (score > best_value)
 			{
-				best_value = args.alpha;
-				if(score > args.alpha)
-					args.alpha = score; // alpha acts like max in MiniMax
+				best_value = alpha;
+				if (score > alpha)
+					alpha = score; // alpha acts like max in MiniMax
 			}
-			if(score >= args.beta)
+			if (score >= beta)
 				return score; // fail soft beta-cutoff
 		}
 		else
 		{
-			if(score < best_value)
+			if (score < best_value)
 			{
 				best_value = score;
-				if(score < args.beta)
-					args.beta = score; // beta acts like min in MiniMax
+				if (score < beta)
+					beta = score; // beta acts like min in MiniMax
 			}
-			if(score <= args.alpha)
+			if (score <= alpha)
 				return score; // fail soft alpha-cutoffs
 		}
 	}
 	return best_value;
 }
 
-movgen::Move get_best_move(movgen::BoardPosition& pos,
-						   std::vector<movgen::Move>* gen_moves = nullptr)
+movgen::Move get_best_move(movgen::BoardPosition *pos, std::vector<movgen::Move> &gen_moves, uint16_t depth = 5)
 {
-	//Generate moves for root position
-	if(gen_moves == nullptr)
-	{
-		std::vector<movgen::Move> pseudo_moves;
-		gen_moves = new std::vector<movgen::Move>;
-
-		pos.side_to_move == movgen::WHITE
-			? movgen::generate_all_moves<movgen::WHITE>(pos, &pseudo_moves)
-			: movgen::generate_all_moves<movgen::BLACK>(pos, &pseudo_moves);
-		movgen::get_legal_moves(pos, pseudo_moves, gen_moves);
-	}
-	if (gen_moves->empty())
-		return movgen::Move(movgen::NO_PIECE, 0, 0);
-
 	std::vector<float> move_eval;
-	move_eval.resize(gen_moves->size());
+	move_eval.resize(gen_moves.size());
 	uint16_t it = 0;
 
 	std::vector<movgen::Move> new_moves;
-	//Trigger the search
-	for(auto& move : *gen_moves)
+	// Trigger the search
+	for (auto &move : gen_moves)
 	{
 		new_moves.clear();
-		movgen::GameStatus result;
 
-		result = movgen::make_move(&pos, move, &new_moves);
-		if(!check_game_state(result, &move_eval[it]))
-			move_eval[it] = minmax_search(&pos, new_moves);
-		movgen::undo_move(&pos, move);
+		movgen::make_move(pos, move, &new_moves);
+		if (!eval_if_game_ended(pos, new_moves, &move_eval[it]))
+			move_eval[it] = minmax_search(pos, new_moves, depth - 1);
+		movgen::undo_move(pos, move);
 
 		it++;
 	}
 
-	//Get max evaluation
+	// Get max evaluation
 	float max_eval = move_eval[0];
 	int max_index = 0;
 	for (int i = 1; i < move_eval.size(); i++)
 	{
-		if (i > max_eval)
+		if (move_eval[i] > max_eval)
 		{
 			max_eval = move_eval[i];
 			max_index = i;
 		}
 	}
-	return (*gen_moves)[max_index];
+	return gen_moves[max_index];
 }
 
-bool check_game_state(movgen::GameStatus status, float* eval)
+bool eval_if_game_ended(movgen::GameStatus status, float *eval)
 {
-	switch(status)
+	switch (status)
 	{
 	case movgen::GAME_CONTINUES:
 		return false;
@@ -140,4 +117,9 @@ bool check_game_state(movgen::GameStatus status, float* eval)
 		*eval = -INFINITY;
 		return true;
 	}
+}
+
+bool eval_if_game_ended(movgen::BoardPosition *pos, std::vector<movgen::Move> &gen_moves, float *eval)
+{
+	return eval_if_game_ended(movgen::check_game_state(pos, gen_moves), eval);
 }
