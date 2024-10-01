@@ -153,6 +153,7 @@ namespace movgen
         // 0 - White, 1 - Black
         Color side_to_move;
         unsigned int fullmove;
+        unsigned int repetiton_num; // For use in check_game_state only. Resets to 0 in undo move
 
         movgen::BoardHash *hash = new movgen::BoardHash(*this);
         PositionInfo *info = nullptr;

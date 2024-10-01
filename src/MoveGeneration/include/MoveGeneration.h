@@ -54,7 +54,8 @@ namespace movgen
     // Filters out non-legal moves from generated moves using PositionInfo
     void get_legal_moves(BoardPosition &pos, std::vector<Move> &generated, std::vector<movgen::Move>* legal_moves);
 
-    GameStatus make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move> *new_moves);
+    void make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move> *new_moves);
+    GameStatus check_game_state(movgen::BoardPosition *pos, std::vector<movgen::Move> &gen_moves);
     void undo_move(movgen::BoardPosition *pos, movgen::Move &move);
 } // namespace movgen
 

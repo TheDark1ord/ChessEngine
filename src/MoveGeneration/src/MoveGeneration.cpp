@@ -378,7 +378,7 @@ void movgen::get_attacked(BoardPosition &pos, PositionInfo *info)
 }
 
 template <movgen::Color color>
-void movgen::generate_all_moves(BoardPosition &pos, std::vector<movgen::Move>* moves)
+void movgen::generate_all_moves(BoardPosition &pos, std::vector<movgen::Move> *moves)
 {
     constexpr movgen::Color col_them = movgen::Color(!color);
 
@@ -407,10 +407,10 @@ void movgen::generate_all_moves(BoardPosition &pos, std::vector<movgen::Move>* m
     get_attacked<col_them>(pos, pos.info);
 }
 
-template void movgen::generate_all_moves<movgen::WHITE>(BoardPosition &pos, std::vector<movgen::Move>* moves);
-template void movgen::generate_all_moves<movgen::BLACK>(BoardPosition &pos, std::vector<movgen::Move>* moves);
+template void movgen::generate_all_moves<movgen::WHITE>(BoardPosition &pos, std::vector<movgen::Move> *moves);
+template void movgen::generate_all_moves<movgen::BLACK>(BoardPosition &pos, std::vector<movgen::Move> *moves);
 
-void movgen::get_legal_moves(BoardPosition &pos, std::vector<Move> &generated, std::vector<movgen::Move>* legal_moves)
+void movgen::get_legal_moves(BoardPosition &pos, std::vector<Move> &generated, std::vector<movgen::Move> *legal_moves)
 {
     const Color c = pos.side_to_move;
     const unsigned int us = 8 * c;
@@ -459,7 +459,7 @@ void movgen::get_legal_moves(BoardPosition &pos, std::vector<Move> &generated, s
     }
 }
 
-movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move>* new_moves)
+void movgen::make_move(movgen::BoardPosition *pos, movgen::Move &move, std::vector<movgen::Move> *new_moves)
 {
     const bitb::Direction down = pos->side_to_move == movgen::WHITE ? bitb::DOWN : bitb::UP;
     const movgen::CastlingRights castling = pos->side_to_move == movgen::WHITE ? movgen::WHITE_CASTLE : movgen::BLACK_CASTLE;
@@ -610,17 +610,28 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
             reps += hash_it->key == pos->hash->key;
         } while (hash_it->ply > 0 && hash_it->prev != nullptr);
 
+        assert(reps <= 3); // Should not be more than 3 in a normal game
         if (reps >= 3)
-            return movgen::DRAW;
+        {
+            pos->repetiton_num = reps;
+            return;
+        }
     }
 
-    static std::vector<movgen::Move> pseudo_legal;
-    pseudo_legal.clear();
+    std::vector<movgen::Move> pseudo_legal;
+    if(pos->side_to_move == movgen::WHITE)
+        movgen::generate_all_moves<movgen::WHITE>(*pos, &pseudo_legal);
+    else
+        movgen::generate_all_moves<movgen::BLACK>(*pos, &pseudo_legal);
 
-    pos->side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(*pos, &pseudo_legal) : movgen::generate_all_moves<movgen::BLACK>(*pos, &pseudo_legal);
     movgen::get_legal_moves(*pos, pseudo_legal, new_moves);
+}
 
-    if (new_moves->size() == 0)
+movgen::GameStatus movgen::check_game_state(movgen::BoardPosition *pos, std::vector<movgen::Move> &gen_moves)
+{
+    if (pos->repetiton_num >= 3)
+        return movgen::DRAW;
+    if (gen_moves.size() == 0)
     {
         if (pos->info->checks_num > 0)
             return pos->side_to_move == movgen::WHITE ? movgen::BLACK_WINS : movgen::WHITE_WINS;
@@ -653,7 +664,7 @@ void movgen::undo_move(movgen::BoardPosition *pos, movgen::Move &move)
         break;
     case PROMOTION_CAPTURE:
         pos->pieces[promoted] &= ~bitb::sq_bitb(move.to);
-    [[fallthrough]];
+        [[fallthrough]];
     case CAPTURE:
         pos->pieces[captured] |= bitb::sq_bitb(move.to);
         pos->squares[move.to] = captured;
@@ -678,6 +689,7 @@ void movgen::undo_move(movgen::BoardPosition *pos, movgen::Move &move)
 
     movgen::BoardHash *cur = pos->hash;
     pos->hash = pos->hash->prev;
+    pos->repetiton_num = 0;
 
     delete cur;
 
