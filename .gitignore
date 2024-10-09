@@ -4,6 +4,8 @@ build/
 lib/
 
 .*
+!.clang-format
+
 tags
 
 out/
