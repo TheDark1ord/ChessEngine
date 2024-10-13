@@ -41,6 +41,8 @@ int main() {
     std::thread init_thread1(movgen::init);
 	std::thread init_thread2(bitb::init);
 
+    srand(time(NULL));
+
     printf("Initializing...\n");
 	init_thread1.detach();
 	init_thread2.join();

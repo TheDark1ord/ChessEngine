@@ -6,14 +6,23 @@
 #include <climits>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <ctime>
 #include <vector>
+
+#define fuzzy_equal(val1, val2) std::abs(val1 - val2) < 0.01
 
 float minmax_eval(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves, uint16_t depth = 5)
 {
 	_SearchType type = pos->side_to_move == movgen::WHITE ? _SearchType::MAX : _SearchType::MIN;
 
 	if(depth == 0)
-		return eval(*pos);
+	{
+		if(type == _SearchType::MAX)
+			return eval(*pos);
+		else
+			return -eval(*pos);
+	}
 	return __minmax<_SearchType::MIN>(pos, gen_moves, depth, -INFINITY, INFINITY);
 }
 
@@ -25,7 +34,8 @@ std::tuple<float, movgen::Move> minmax_best(movgen::BoardPosition* pos, std::vec
 	float alpha = -INFINITY, beta = INFINITY;
 	float score;
 	float best_value = (type == _SearchType::MAX ? -INFINITY : INFINITY);
-	uint16_t it = 0, best_move_index;
+	uint16_t it = 0;
+	std::vector<uint16_t> best_move_index;
 
 	std::vector<movgen::Move> new_moves;
 	for(auto& move : gen_moves)
@@ -45,10 +55,13 @@ std::tuple<float, movgen::Move> minmax_best(movgen::BoardPosition* pos, std::vec
 			if(score > best_value)
 			{
 				best_value = score;
-				best_move_index = it;
+				best_move_index.clear();
+				best_move_index.push_back(it);
 				if(score > alpha)
 					alpha = score; // alpha acts like max in MiniMax
 			}
+			else if(fuzzy_equal(score, best_value))
+				best_move_index.push_back(it);
 			if(score >= beta)
 				break; // fail soft beta-cutoff
 		}
@@ -57,16 +70,21 @@ std::tuple<float, movgen::Move> minmax_best(movgen::BoardPosition* pos, std::vec
 			if(score < best_value)
 			{
 				best_value = score;
-				best_move_index = it;
+				best_move_index.clear();
+				best_move_index.push_back(it);
 				if(score < beta)
 					beta = score; // beta acts like min in MiniMax
 			}
+			else if(fuzzy_equal(score, best_value))
+				best_move_index.push_back(it);
 			if(score <= alpha)
 				break; // fail soft alpha-cutoffs
 		}
 		++it;
 	}
-	return std::make_tuple(best_value, gen_moves[best_move_index]);
+
+	uint16_t final_index = uint16_t(rand() % best_move_index.size()); 
+	return std::make_tuple(best_value, gen_moves[best_move_index[final_index]]);
 }
 
 std::vector<std::tuple<float, movgen::Move>>
@@ -102,7 +120,12 @@ float __minmax(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves,
 	if(eval_if_game_ended(pos, gen_moves, &score))
 		return score;
 	if(depth == 0)
-		return eval(*pos);
+	{
+		if(type == _SearchType::MAX)
+			return eval(*pos);
+		else
+			return -eval(*pos);
+	}
 
 	float best_value = (type == _SearchType::MAX ? -INFINITY : INFINITY);
 

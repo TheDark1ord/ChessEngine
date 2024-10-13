@@ -13,7 +13,8 @@ void _make_moves(std::vector<std::string>::iterator begin, std::vector<std::stri
 {
 	auto iterator = begin;
 
-	auto cur_moves = _generate_moves();
+	std::vector<movgen::Move> cur_moves = _generate_moves();
+	std::vector<movgen::Move> new_moves = cur_moves;
 	while(iterator != end)
 	{
 		bool made_move = false;
@@ -31,7 +32,6 @@ void _make_moves(std::vector<std::string>::iterator begin, std::vector<std::stri
 		else
 			move_string = iterator->substr(0, iterator->find(':'));
 
-		std::vector<movgen::Move> new_moves = cur_moves;
 		for(auto& move : new_moves)
 		{
 			if((std::string(_squares[move.from]) + (std::string(_squares[move.to]))) == move_string)
@@ -69,6 +69,7 @@ void save_position(std::vector<std::string> args)
 	if(args[0] == "startpos")
 	{
 		fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+		it++;
 	}
 	else if(args[0] == "fen")
 	{ // Fen string contains spaces so we have to concatenate these strings
@@ -129,7 +130,7 @@ void start_search(std::vector<std::string> args)
 			if(args.size() < 2)
 				throw std::runtime_error("Please provide a depth value");
 			auto best_move = minmax_best(&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
-			printf("%s: %f\n", std::string(std::get<1>(best_move)).c_str(), std::round(std::get<0>(best_move)));
+			printf("%s: %.1f\n", std::string(std::get<1>(best_move)).c_str(), std::get<0>(best_move));
 			//minmax_eval(&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
 		}
 		else if(args[0] == "time")

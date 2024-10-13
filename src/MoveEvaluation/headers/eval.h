@@ -23,6 +23,9 @@ static constexpr float piece_val(movgen::PieceType piece) {
   }
 }
 
+static float _eval_white(movgen::BoardPosition& pos);
+static float _eval_black(movgen::BoardPosition& pos);
+
 // Range: -40 -- +40
 // (-)n*e+3 -- mate in n moves
 float eval(movgen::BoardPosition &pos);
