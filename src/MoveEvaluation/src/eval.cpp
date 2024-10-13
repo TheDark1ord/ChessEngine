@@ -9,7 +9,7 @@ float eval(movgen::BoardPosition& pos)
 	return (_eval_white(pos) - _eval_black(pos)) * (pos.side_to_move * 2 - 1);
 }
 
-float _eval_white(movgen::BoardPosition& pos)
+static float _eval_white(movgen::BoardPosition& pos)
 {
 	float piece_eval = 0.0f;
 	for(uint16_t piece_type = movgen::Piece::W_KING; piece_type <= movgen::Piece::W_PAWN; piece_type++)
@@ -33,7 +33,7 @@ float _eval_white(movgen::BoardPosition& pos)
 	return piece_eval + piece_mobility + center_control;
 }
 
-float _eval_black(movgen::BoardPosition& pos)
+static float _eval_black(movgen::BoardPosition& pos)
 {
 	float piece_eval = 0.0f;
 	for(uint16_t piece_type = movgen::Piece::B_KING; piece_type <= movgen::Piece::B_PAWN; piece_type++)

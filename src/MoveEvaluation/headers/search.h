@@ -22,5 +22,5 @@ static float
 __minmax(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves, uint16_t depth, float alpha, float beta);
 
 // Return eval, if the game ended
-static bool eval_if_game_ended(movgen::GameStatus status, float* eval);
-static bool eval_if_game_ended(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves, float* eval);
+bool eval_if_game_ended(movgen::GameStatus status, float* eval);
+bool eval_if_game_ended(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves, float* eval);

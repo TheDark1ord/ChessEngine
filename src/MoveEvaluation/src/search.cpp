@@ -41,8 +41,8 @@ std::tuple<float, movgen::Move> minmax_best(movgen::BoardPosition* pos, std::vec
 	for(auto& move : gen_moves)
 	{
 		new_moves.clear();
-		movgen::make_move(pos, move, &new_moves);
 
+		movgen::make_move(pos, move, &new_moves);
 		// Recursion call here
 		if(type == _SearchType::MAX)
 			score = __minmax<_SearchType::MIN>(pos, new_moves, depth - 1, alpha, beta);
