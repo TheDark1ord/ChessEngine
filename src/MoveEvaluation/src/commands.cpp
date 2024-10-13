@@ -73,7 +73,7 @@ void save_position(std::vector<std::string> args)
 	else if(args[0] == "fen")
 	{ // Fen string contains spaces so we have to concatenate these strings
 		for(it = 1; it < args.size() && args[it] != "moves"; it++)
-			fen.append(args[it]);
+			fen.append(args[it] + ' ');
 	}
 	else
 	{
@@ -98,7 +98,7 @@ void save_position(std::vector<std::string> args)
 	{
 		try
 		{
-            _make_moves(args.begin() + it + 1, args.end());
+			_make_moves(args.begin() + it + 1, args.end());
 		}
 		catch(std::runtime_error e)
 		{
@@ -107,6 +107,8 @@ void save_position(std::vector<std::string> args)
 			printf("Error: %s\n", e.what());
 		}
 	}
+
+	_saved_pos.print();
 
 	_gen_moves.clear();
 	_gen_moves = _generate_moves();
@@ -120,19 +122,20 @@ void start_search(std::vector<std::string> args)
 		return;
 	}
 
-	if (args.size() > 0)
+	if(args.size() > 0)
 	{
 		if(args[0] == "depth")
 		{
-			if (args.size() < 2)
+			if(args.size() < 2)
 				throw std::runtime_error("Please provide a depth value");
-			auto best_move = get_best_move(&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
-			printf("%s\n", std::string(best_move).c_str());
-			//minmax_search(&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
+			auto best_move = minmax_best(
+				&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
+			printf("%s\n", std::string(std::get<1>(best_move)).c_str());
+			//minmax_eval(&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
 		}
 		else if(args[0] == "time")
 		{
-			if (args.size() < 2)
+			if(args.size() < 2)
 				throw std::runtime_error("Please provide a time value");
 			throw std::logic_error("Not implemented");
 		}

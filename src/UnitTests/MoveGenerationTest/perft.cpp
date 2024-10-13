@@ -92,8 +92,7 @@ int main(int argc, char* argv[])
 				printf("%s%s: %u\n", squares[move.from], squares[move.to], 1);
 
 		uint64_t counted = count_moves(initial_position, &cur_moves, i + 1, true);
-
-		printf("\nNodes reached: %lu\n\n", counted);
+		printf("\nNodes reached: %llu\n\n", counted);
 
 		if(argc < 4 && counted != (*pos_num)[i])
 			return -1;
@@ -115,15 +114,15 @@ uint64_t count_moves(movgen::BoardPosition& initial,
 	uint64_t move_count = 0;
 	for(auto& move : *cur_moves)
 	{
-		auto result = movgen::make_move(&initial, move, &new_moves);
+		movgen::make_move(&initial, move, &new_moves);
 
-		if(result == movgen::GAME_CONTINUES)
+		if(movgen::check_game_state(&initial, new_moves) == movgen::GAME_CONTINUES)
 		{
 			auto counted = count_moves(initial, &new_moves, depth - 1);
 			move_count += counted;
 
 			if(toplevel)
-				printf("%s%s: %lu\n", squares[move.from], squares[move.to], counted);
+				printf("%s%s: %llu\n", squares[move.from], squares[move.to], counted);
 		}
 		movgen::undo_move(&initial, move);
 		new_moves.clear();

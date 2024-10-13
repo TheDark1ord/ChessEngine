@@ -46,7 +46,7 @@ std::vector<bpos> bitb::bitscan(bitboard board)
     // TODO: Test optimal reserve number or even better update to better algorithm
     set_bits.reserve(8);
 
-    while (board != 0)
+    while (board)
     {
         set_bits.push_back(pop_lsb(board));
         board &= board - 1;
@@ -94,7 +94,7 @@ unsigned char bitb::bit_count(bitboard board)
     int n = 0;
     while (board)
     {
-        board ^= board & (~board + 1);
+        board &= board - 1;
         ++n;
     }
     return n;
