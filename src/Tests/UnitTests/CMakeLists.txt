@@ -1,9 +1,8 @@
-
 set(MOVE_GENERATION_SOURCE_DIR "${PROJECT_SOURCE_DIR}/lib/")
 include_directories("${MOVE_GENERATION_SOURCE_DIR}/include")
 
-add_executable(SlidingPiecesTest MoveGenerationTest/sliding_pieces.cpp)
-add_executable(PerftTest MoveGenerationTest/perft.cpp)
+add_executable(SlidingPiecesTest MoveGenerationTests/sliding_pieces.cpp)
+add_executable(PerftTest MoveGenerationTests/perft.cpp)
 
 target_link_libraries(SlidingPiecesTest PRIVATE MoveGeneration)
 target_link_libraries(PerftTest PRIVATE MoveGeneration)

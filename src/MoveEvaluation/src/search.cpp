@@ -13,12 +13,7 @@ float minmax_eval(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_mov
 	_SearchType type = pos->side_to_move == movgen::WHITE ? _SearchType::MAX : _SearchType::MIN;
 
 	if(depth == 0)
-	{
-		if(type == _SearchType::MAX)
-			return eval(*pos);
-		else
-			return -eval(*pos);
-	}
+		return eval(*pos);
 	return __minmax<_SearchType::MIN>(pos, gen_moves, depth, -INFINITY, INFINITY);
 }
 
@@ -69,6 +64,7 @@ std::tuple<float, movgen::Move> minmax_best(movgen::BoardPosition* pos, std::vec
 			if(score <= alpha)
 				break; // fail soft alpha-cutoffs
 		}
+		++it;
 	}
 	return std::make_tuple(best_value, gen_moves[best_move_index]);
 }

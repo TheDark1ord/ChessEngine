@@ -128,9 +128,8 @@ void start_search(std::vector<std::string> args)
 		{
 			if(args.size() < 2)
 				throw std::runtime_error("Please provide a depth value");
-			auto best_move = minmax_best(
-				&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
-			printf("%s\n", std::string(std::get<1>(best_move)).c_str());
+			auto best_move = minmax_best(&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
+			printf("%s: %f\n", std::string(std::get<1>(best_move)).c_str(), std::round(std::get<0>(best_move)));
 			//minmax_eval(&_saved_pos, _gen_moves, static_cast<uint16_t>(atoi(args[1].c_str())));
 		}
 		else if(args[0] == "time")
@@ -161,9 +160,8 @@ std::vector<movgen::Move> _generate_moves()
 	std::vector<movgen::Move> pseudo_moves;
 	std::vector<movgen::Move> legal_moves;
 
-	_saved_pos.side_to_move == movgen::WHITE
-		? movgen::generate_all_moves<movgen::WHITE>(_saved_pos, &pseudo_moves)
-		: movgen::generate_all_moves<movgen::BLACK>(_saved_pos, &pseudo_moves);
+	_saved_pos.side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(_saved_pos, &pseudo_moves)
+											 : movgen::generate_all_moves<movgen::BLACK>(_saved_pos, &pseudo_moves);
 	movgen::get_legal_moves(_saved_pos, pseudo_moves, &legal_moves);
 
 	return legal_moves;
