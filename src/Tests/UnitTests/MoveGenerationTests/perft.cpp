@@ -59,8 +59,8 @@ int main(int argc, char* argv[])
 	std::vector<movgen::Move> cur_moves;
 	std::vector<movgen::Move> legal_moves;
 	initial_position.side_to_move == movgen::WHITE
-		? movgen::generate_all_moves<movgen::WHITE>(initial_position, &cur_moves)
-		: movgen::generate_all_moves<movgen::BLACK>(initial_position, &cur_moves);
+		? movgen::generate_all_moves<movgen::WHITE,movgen::GenType::ALL_MOVES>(initial_position, &cur_moves)
+		: movgen::generate_all_moves<movgen::BLACK,movgen::GenType::ALL_MOVES>(initial_position, &cur_moves);
 	movgen::get_legal_moves(initial_position, cur_moves, &legal_moves);
 	cur_moves = legal_moves;
 

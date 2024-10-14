@@ -87,11 +87,13 @@ enum MoveType
 	CASTLING
 };
 
-enum GenType
+enum class GenType
 {
-	ATTACKS,
+	ALL_MOVES,
 	QUIETS,
-	ALL_MOVES
+	CAPTURES,
+	PROMOTIONS,
+	CASTLING
 };
 
 struct PositionInfo

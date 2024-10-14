@@ -161,8 +161,9 @@ std::vector<movgen::Move> _generate_moves()
 	std::vector<movgen::Move> pseudo_moves;
 	std::vector<movgen::Move> legal_moves;
 
-	_saved_pos.side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(_saved_pos, &pseudo_moves)
-											 : movgen::generate_all_moves<movgen::BLACK>(_saved_pos, &pseudo_moves);
+	_saved_pos.side_to_move == movgen::WHITE
+		? movgen::generate_all_moves<movgen::WHITE, movgen::GenType::ALL_MOVES>(_saved_pos, &pseudo_moves)
+		: movgen::generate_all_moves<movgen::BLACK, movgen::GenType::ALL_MOVES>(_saved_pos, &pseudo_moves);
 	movgen::get_legal_moves(_saved_pos, pseudo_moves, &legal_moves);
 
 	return legal_moves;
