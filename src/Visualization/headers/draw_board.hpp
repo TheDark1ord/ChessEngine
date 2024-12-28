@@ -32,7 +32,7 @@ static float map_range(float input, float in_start, float in_end, float out_star
 class Board
 {
 public:
-  Board(sf::Vector2u window_size, bool flipped = false);
+  Board(sf::Vector2u window_size, std::string data_dir, bool flipped = false);
 
   void resize(sf::Vector2u new_window_size);
   void draw_board(sf::RenderWindow *window, movgen::BoardPosition *pos);

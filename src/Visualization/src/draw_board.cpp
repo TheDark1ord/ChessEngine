@@ -1,11 +1,12 @@
 #include "../headers/draw_board.hpp"
 #include <cassert>
+#include <format>
 
-Board::Board(sf::Vector2u window_size, bool flipped)
+Board::Board(sf::Vector2u window_size, std::string data_dir, bool flipped)
     : flipped(flipped)
 {
     this->window_size = window_size;
-    label_font.loadFromFile("../data/inconsolata.ttf");
+    label_font.loadFromFile(std::format("{}/inconsolata.ttf", data_dir));
 
     squares.setUsage(sf::VertexBuffer::Static);
     squares.setPrimitiveType(sf::Quads);
@@ -13,23 +14,23 @@ Board::Board(sf::Vector2u window_size, bool flipped)
 
     this->resize(window_size);
 
-    w_pawn_texture = this->parse_svg_file("../data/w_pn.svg");
-    b_pawn_texture = this->parse_svg_file("../data/b_pn.svg");
+    w_pawn_texture = this->parse_svg_file(std::format("{}/w_pn.svg", data_dir).c_str());
+    b_pawn_texture = this->parse_svg_file(std::format("{}/b_pn.svg", data_dir).c_str());
 
-    w_knight_texture = this->parse_svg_file("../data/w_kn.svg");
-    b_knight_texture = this->parse_svg_file("../data/b_kn.svg");
+    w_knight_texture = this->parse_svg_file(std::format("{}/w_kn.svg", data_dir).c_str());
+    b_knight_texture = this->parse_svg_file(std::format("{}/b_kn.svg", data_dir).c_str());
 
-    w_bishop_texture = this->parse_svg_file("../data/w_bs.svg");
-    b_bishop_texture = this->parse_svg_file("../data/b_bs.svg");
+    w_bishop_texture = this->parse_svg_file(std::format("{}/w_bs.svg", data_dir).c_str());
+    b_bishop_texture = this->parse_svg_file(std::format("{}/b_bs.svg", data_dir).c_str());
 
-    w_rook_texture = this->parse_svg_file("../data/w_rk.svg");
-    b_rook_texture = this->parse_svg_file("../data/b_rk.svg");
+    w_rook_texture = this->parse_svg_file(std::format("{}/w_rk.svg", data_dir).c_str());
+    b_rook_texture = this->parse_svg_file(std::format("{}/b_rk.svg", data_dir).c_str());
 
-    w_queen_texture = this->parse_svg_file("../data/w_qn.svg");
-    b_queen_texture = this->parse_svg_file("../data/b_qn.svg");
+    w_queen_texture = this->parse_svg_file(std::format("{}/w_qn.svg", data_dir).c_str());
+    b_queen_texture = this->parse_svg_file(std::format("{}/b_qn.svg", data_dir).c_str());
 
-    w_king_texture = this->parse_svg_file("../data/w_kg.svg");
-    b_king_texture = this->parse_svg_file("../data/b_kg.svg");
+    w_king_texture = this->parse_svg_file(std::format("{}/w_kg.svg", data_dir).c_str());
+    b_king_texture = this->parse_svg_file(std::format("{}/b_kg.svg", data_dir).c_str());
 }
 
 void Board::resize(sf::Vector2u new_window_size)

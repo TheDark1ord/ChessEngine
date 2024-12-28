@@ -28,7 +28,8 @@ private:
 
     sf::RenderWindow window;
     sf::Image game_icon;
-    Board *board;
+    std::string data_dir;
+    Board* board;
 
     movgen::BoardPosition position;
 

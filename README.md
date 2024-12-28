@@ -16,13 +16,22 @@ This is my chess engine
 
 ## Как скомпилировать этот проект
 
-1. Понадобится [vcpkg](https://github.com/microsoft/vcpkg), [cmake](https://cmake.org/) и [make](https://gnuwin32.sourceforge.net/packages/make.htm)
+1. Понадобится [vcpkg](https://github.com/microsoft/vcpkg) [cmake](https://cmake.org/)
     1. сmake нужен для созжания make файлов, которые используются для компиляции проекта\
     2. vcpkg используется для скачивания зависимостей
     3. Для того, чтобы скомпилировать код, требуется любой компилятор c++. Этот проект тестировался с clang++ и компилятором Visual Studio.
 
->После установки vcpkg нужно сказать Cmake где он находится. Откройте файл src/CmakeLists.txt и измените строчку CMAKE_TOOLCHAIN_FILE чтобы она указывала на файл vcpkg.cmake в папке vcpkg. После чего vcpkg автоматически установит все зависимости при сборке проекта.
+>После установки vcpkg нужно сказать Cmake где он находится. Создайте файл src/CmakeLists.txt из src/CmakeLists.txt.template и измените строчку CMAKE_TOOLCHAIN_FILE чтобы она указывала на файл vcpkg.cmake в папке установки vcpkg. После чего vcpkg автоматически установит все зависимости при сборке проекта.
 
 2. Зависимости:
     1. SFML -- графическая библиотека.
     2. NanoSVG -- библиотека для конвертации svg файлов в растровый формат, который может прочитать SFML.
+
+3. Для компилации проекта можно испоьзовать VS, VSCode или консоль, команды для сборки проекта в консоли
+```
+mkdir build
+cd build
+cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_BUILD_TYPE=RELEASE ../
+cmake --build .
+```
+После компиляции проект будет лежать в папке _app/_
