@@ -57,11 +57,10 @@ int main(int argc, char* argv[])
 		depth = std::atoi(argv[2]);
 
 	std::vector<movgen::Move> cur_moves;
-	std::vector<movgen::Move> legal_moves;
 	initial_position.side_to_move == movgen::WHITE
 		? movgen::generate_all_moves<movgen::WHITE,movgen::GenType::ALL_MOVES>(initial_position, &cur_moves)
 		: movgen::generate_all_moves<movgen::BLACK,movgen::GenType::ALL_MOVES>(initial_position, &cur_moves);
-	movgen::get_legal_moves(initial_position, cur_moves, &legal_moves);
+	std::vector<movgen::Move> legal_moves = movgen::get_legal_moves(initial_position, cur_moves);
 	cur_moves = legal_moves;
 
 	// If any moves are specified as additional arguments, make that moves

@@ -3,6 +3,20 @@
 #include "../include/Zobrist.h"
 #include <cassert>
 
+#define PIECE_MOVE_INSTANCE(piece, type)                                                                                    \
+	template void movgen::generate_piece_moves<piece, type>(                                                                \
+		bpos piece_pos, BoardPosition & pos, movgen::Color c, std::vector<Move> * generated)
+
+#define PAWN_MOVE_INSTANCE(piece, type)                                                                                     \
+	template void movgen::generate_pawn_moves<piece, type>(BoardPosition & pos, std::vector<Move> * generated)
+
+#define ALL_MOVE_INSTANCE(piece, type)                                                                                      \
+	template void movgen::generate_all_moves<piece, type>(BoardPosition & pos, std::vector<Move> * generated)
+
+#define MAKE_MOVE_INSTANCE(type)                                                                                            \
+	template void movgen::make_move<type>(                                                                                  \
+		movgen::BoardPosition * pos, movgen::Move & move, std::vector<movgen::Move> * new_moves)
+
 bitboard movgen::knight_attacks[64];
 bitboard movgen::king_attacks[64];
 std::atomic_bool movgen::initialized = false;
@@ -444,18 +458,31 @@ void movgen::generate_all_moves(BoardPosition& pos, std::vector<movgen::Move>* m
 	// TODO: Test optimal reserve number
 	moves->reserve(10);
 
-	for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KING, color)]))
-		generate_piece_moves<movgen::KING, gen_type>(piece_pos, pos, color, moves);
-	for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::QUEEN, color)]))
-		generate_piece_moves<movgen::QUEEN, gen_type>(piece_pos, pos, color, moves);
-	for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::ROOK, color)]))
-		generate_piece_moves<movgen::ROOK, gen_type>(piece_pos, pos, color, moves);
-	for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::BISHOP, color)]))
-		generate_piece_moves<movgen::BISHOP, gen_type>(piece_pos, pos, color, moves);
-	for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KNIGHT, color)]))
-		generate_piece_moves<movgen::KNIGHT, gen_type>(piece_pos, pos, color, moves);
-
-	movgen::generate_pawn_moves<color, gen_type>(pos, moves);
+	switch(gen_type)
+	{
+	case movgen::GenType::ALL_MOVES:
+	case movgen::GenType::QUIETS:
+	case movgen::GenType::CAPTURES:
+		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KING, color)]))
+			generate_piece_moves<movgen::KING, gen_type>(piece_pos, pos, color, moves);
+		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::QUEEN, color)]))
+			generate_piece_moves<movgen::QUEEN, gen_type>(piece_pos, pos, color, moves);
+		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::ROOK, color)]))
+			generate_piece_moves<movgen::ROOK, gen_type>(piece_pos, pos, color, moves);
+		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::BISHOP, color)]))
+			generate_piece_moves<movgen::BISHOP, gen_type>(piece_pos, pos, color, moves);
+		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KNIGHT, color)]))
+			generate_piece_moves<movgen::KNIGHT, gen_type>(piece_pos, pos, color, moves);
+		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
+		break;
+	case movgen::GenType::PROMOTIONS:
+		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
+		break;
+	case movgen::GenType::CASTLING:
+		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KING, color)]))
+			generate_piece_moves<movgen::KING, gen_type>(piece_pos, pos, color, moves);
+		break;
+	}
 
 	if(pos.info != nullptr)
 		delete pos.info;
@@ -468,7 +495,18 @@ void movgen::generate_all_moves(BoardPosition& pos, std::vector<movgen::Move>* m
 	get_attacked<movgen::BLACK>(pos, pos.info);
 }
 
-void movgen::get_legal_moves(BoardPosition& pos, std::vector<Move>& generated, std::vector<movgen::Move>* legal_moves)
+ALL_MOVE_INSTANCE(movgen::WHITE, movgen::GenType::ALL_MOVES);
+ALL_MOVE_INSTANCE(movgen::WHITE, movgen::GenType::QUIETS);
+ALL_MOVE_INSTANCE(movgen::WHITE, movgen::GenType::CAPTURES);
+ALL_MOVE_INSTANCE(movgen::WHITE, movgen::GenType::PROMOTIONS);
+ALL_MOVE_INSTANCE(movgen::WHITE, movgen::GenType::CASTLING);
+ALL_MOVE_INSTANCE(movgen::BLACK, movgen::GenType::ALL_MOVES);
+ALL_MOVE_INSTANCE(movgen::BLACK, movgen::GenType::QUIETS);
+ALL_MOVE_INSTANCE(movgen::BLACK, movgen::GenType::CAPTURES);
+ALL_MOVE_INSTANCE(movgen::BLACK, movgen::GenType::PROMOTIONS);
+ALL_MOVE_INSTANCE(movgen::BLACK, movgen::GenType::CASTLING);
+
+std::vector<movgen::Move> movgen::get_legal_moves(BoardPosition& pos, std::vector<Move>& generated)
 {
 	const Color c = pos.side_to_move;
 	const unsigned int us = 8 * c;
@@ -479,7 +517,8 @@ void movgen::get_legal_moves(BoardPosition& pos, std::vector<Move>& generated, s
 								  ? (pos.info->b_piece_attacks & pos.info->b_pawn_attacks & pos.info->b_king_attacks)
 								  : (pos.info->w_piece_attacks & pos.info->w_pawn_attacks & pos.info->w_king_attacks);
 
-	legal_moves->reserve(generated.size());
+	std::vector<movgen::Move> legal_moves;
+	legal_moves.reserve(generated.size());
 
 	// Only king moves are possible
 	if(pos.info->checks_num >= 2)
@@ -490,11 +529,11 @@ void movgen::get_legal_moves(BoardPosition& pos, std::vector<Move>& generated, s
 			{
 				if(!(attacked & bitb::sq_bitb(move.to)))
 				{
-					legal_moves->push_back(move);
+					legal_moves.push_back(move);
 				}
 			}
 		}
-		return;
+		return legal_moves;
 	}
 	// Only allow king moves and blockers
 	if(pos.info->checks_num == 1)
@@ -506,20 +545,23 @@ void movgen::get_legal_moves(BoardPosition& pos, std::vector<Move>& generated, s
 			if((move.from == ksq && move.get_type() != CASTLING && _is_legal(pos, move)) ||
 			   (move.from != ksq && bitb::sq_bitb(move.to) & pos.info->blockers))
 			{
-				legal_moves->push_back(move);
+				legal_moves.push_back(move);
 			}
 		}
-		return;
+		return legal_moves;
 	}
 
 	for(Move move : generated)
 	{
 		// Check for legality only if one these 4 requirements is met
 		if(!(bitb::sq_bitb(move.from) & pinned || move.from == ksq || move.get_type() == EN_PASSANT) || _is_legal(pos, move))
-			legal_moves->push_back(move);
+			legal_moves.push_back(move);
 	}
+
+	return legal_moves;
 }
 
+template <movgen::GenType gen_type>
 void movgen::make_move(movgen::BoardPosition* pos, movgen::Move& move, std::vector<movgen::Move>* new_moves)
 {
 	const bitb::Direction down = pos->side_to_move == movgen::WHITE ? bitb::DOWN : bitb::UP;
@@ -675,14 +717,23 @@ void movgen::make_move(movgen::BoardPosition* pos, movgen::Move& move, std::vect
 		}
 	}
 
-	std::vector<movgen::Move> pseudo_legal;
-	if(pos->side_to_move == movgen::WHITE)
-		movgen::generate_all_moves<movgen::WHITE, movgen::GenType::ALL_MOVES>(*pos, &pseudo_legal);
-	else
-		movgen::generate_all_moves<movgen::BLACK, movgen::GenType::ALL_MOVES>(*pos, &pseudo_legal);
+	if(new_moves != nullptr)
+	{
+		std::vector<movgen::Move> pseudo_legal;
+		if(pos->side_to_move == movgen::WHITE)
+			movgen::generate_all_moves<movgen::WHITE, gen_type>(*pos, &pseudo_legal);
+		else
+			movgen::generate_all_moves<movgen::BLACK, gen_type>(*pos, &pseudo_legal);
 
-	movgen::get_legal_moves(*pos, pseudo_legal, new_moves);
+		*new_moves = movgen::get_legal_moves(*pos, pseudo_legal);
+	}
 }
+
+MAKE_MOVE_INSTANCE(movgen::GenType::ALL_MOVES);
+MAKE_MOVE_INSTANCE(movgen::GenType::QUIETS);
+MAKE_MOVE_INSTANCE(movgen::GenType::CAPTURES);
+MAKE_MOVE_INSTANCE(movgen::GenType::PROMOTIONS);
+MAKE_MOVE_INSTANCE(movgen::GenType::CASTLING);
 
 movgen::GameStatus movgen::check_game_state(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves)
 {

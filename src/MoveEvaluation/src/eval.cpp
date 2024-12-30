@@ -49,7 +49,7 @@ static float _eval_black(movgen::BoardPosition& pos)
 	piece_mobility -=
 		static_cast<float>(bitb::bit_count(pos.info->b_king_attacks & ~(pos.pieces[movgen::BLACK_PIECES]))) * 0.05f;
 
-	float center_control = 0.0f;
+	float center_control = 0.0f;  
 	center_control +=
 		static_cast<float>(bitb::bit_count(center & (pos.info->b_pawn_attacks | pos.info->b_piece_attacks))) * 0.1;
 	center_control += static_cast<float>(bitb::bit_count(center & (pos.pieces[movgen::B_PAWN]))) * 0.1;

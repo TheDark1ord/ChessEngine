@@ -1,13 +1,6 @@
 #ifndef MOVGEN_H
 #define MOVGEN_H
 
-#define PIECE_MOVE_INSTANCE(piece, type)                                                                                    \
-	template void movgen::generate_piece_moves<piece, type>(                                                                \
-		bpos piece_pos, BoardPosition & pos, movgen::Color c, std::vector<Move> * generated)
-
-#define PAWN_MOVE_INSTANCE(piece, type)                                                                                     \
-	template void movgen::generate_pawn_moves<piece, type>(BoardPosition & pos, std::vector<Move> * generated)
-
 #include <vector>
 
 #include "Bitboard.h"
@@ -56,9 +49,10 @@ void get_attacked(BoardPosition& pos, PositionInfo* info);
 template <movgen::Color color, movgen::GenType gen_type>
 void generate_all_moves(BoardPosition& pos, std::vector<movgen::Move>* moves);
 // Filters out non-legal moves from generated moves using PositionInfo
-void get_legal_moves(BoardPosition& pos, std::vector<Move>& generated, std::vector<movgen::Move>* legal_moves);
+std::vector<movgen::Move> get_legal_moves(BoardPosition& pos, std::vector<Move>& generated);
 
-void make_move(movgen::BoardPosition* pos, movgen::Move& move, std::vector<movgen::Move>* new_moves);
+template <movgen::GenType gen_type = movgen::GenType::ALL_MOVES>
+void make_move(movgen::BoardPosition* pos, movgen::Move& move, std::vector<movgen::Move>* new_moves = nullptr);
 GameStatus check_game_state(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves);
 void undo_move(movgen::BoardPosition* pos, movgen::Move& move);
 } // namespace movgen

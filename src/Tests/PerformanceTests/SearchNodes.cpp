@@ -21,11 +21,11 @@ const std::string fen_strings[]{
 
 template <_SearchType type>
 float _minmax(movgen::BoardPosition* pos,
-					 std::vector<movgen::Move>& gen_moves,
-					 uint16_t depth,
-					 float alpha,
-					 float beta,
-					 size_t* nodes_reached);
+			  std::vector<movgen::Move>& gen_moves,
+			  uint16_t depth,
+			  float alpha,
+			  float beta,
+			  size_t* nodes_reached);
 
 int main(int argc, char* argv[])
 {
@@ -37,19 +37,19 @@ int main(int argc, char* argv[])
 
 	uint16_t test_index = std::atoi(argv[1]);
 	movgen::BoardPosition pos = movgen::board_from_fen(fen_strings[test_index]);
+
 	std::vector<movgen::Move> pseudo_moves;
-	std::vector<movgen::Move> legal_moves;
+	pos.side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE, movgen::GenType::ALL_MOVES>(pos, &pseudo_moves)
+									  : movgen::generate_all_moves<movgen::BLACK, movgen::GenType::ALL_MOVES>(pos, &pseudo_moves);
+	std::vector<movgen::Move> legal_moves = movgen::get_legal_moves(pos, pseudo_moves);
 
-	pos.side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(pos, &pseudo_moves)
-									  : movgen::generate_all_moves<movgen::BLACK>(pos, &pseudo_moves);
-	movgen::get_legal_moves(pos, pseudo_moves, &legal_moves);
 	size_t nodes_reached = 0;
-
 	for(int depth = 0; depth <= MAX_DEPTH; depth++)
 	{
 		_minmax<_SearchType::MAX>(&pos, legal_moves, (uint16_t)depth, -INFINITY, INFINITY, &nodes_reached);
 		printf("Depth: %i, nodes searched: %lli\n", depth, nodes_reached);
 		nodes_reached = 0;
+		_transposition_table.clear();
 	}
 
 	return 0;
@@ -64,6 +64,10 @@ float _minmax(movgen::BoardPosition* pos,
 			  size_t* nodes_reached)
 {
 	(*nodes_reached)++;
+
+	// Position has been reached return the cashed score
+	if(auto row = _transposition_table.find(pos->hash->key); row != _transposition_table.end())
+		return row->second.score;
 
 	float score;
 	if(eval_if_game_ended(pos, gen_moves, &score))
@@ -89,6 +93,9 @@ float _minmax(movgen::BoardPosition* pos,
 			score = _minmax<_SearchType::MIN>(pos, new_moves, depth - 1, alpha, beta, nodes_reached);
 		else
 			score = _minmax<_SearchType::MAX>(pos, new_moves, depth - 1, alpha, beta, nodes_reached);
+
+		//We have fully searched the position, cache the score
+		_transposition_table.emplace(std::make_pair(pos->hash->key, _TranspositionTableRow({score})));
 		movgen::undo_move(pos, move);
 
 		if(type == _SearchType::MAX)
