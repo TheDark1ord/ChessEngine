@@ -7,5 +7,5 @@ add_executable(engine main.cpp
     src/search.cpp
 )
 
-find_package(spdlog REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(engine PRIVATE MoveGeneration spdlog::spdlog_header_only)
