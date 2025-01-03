@@ -9,7 +9,9 @@
 #include "headers/commands.h"
 #include "MoveGeneration.h"
 
-constexpr uint16_t TABLE_SIZE = 3;
+constexpr uint16_t TABLE_SIZE = 4;
+
+void print_help(std::vector<std::string> args);
 
 // Struct that is used to call functions from cmd
 struct CommandStruct
@@ -19,7 +21,8 @@ struct CommandStruct
 } commandTable[TABLE_SIZE] = {
     { "position", save_position },
     { "search", start_search },
-    { "perft", start_perft }
+    { "perft", start_perft },
+    { "help", print_help }
 };
 
 std::vector<std::string> split_string(std::string str, std::string delim)
@@ -81,4 +84,14 @@ int main() {
     }
 
     return 0;
+}
+
+void print_help(std::vector<std::string> args)
+{
+    if (args.size() == 0)
+    {
+        printf("Get a grip! You are a man! You don't need any help!\n");
+        return;
+    }
+    printf("Get a grip! You are a man! You don't need any help!\n");
 }
