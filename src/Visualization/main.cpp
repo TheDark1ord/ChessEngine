@@ -21,8 +21,7 @@ int main()
 
     try
     {
-        //Chess chess({ 1000, 1000 });
-        Chess chess({1000, 1000}, "rnbB1k1r/pp1P1ppp/2pb4/8/2B5/8/PPP1NnPP/RN1QK2R b KQ - 0 9");
+        Chess chess({ 1000, 1000 });
         chess.loop();
     }
     catch (std::exception ex)
@@ -50,7 +49,7 @@ void terminate_func()
         std::cerr << typeid(std::current_exception()).name() << std::endl;
         std::cerr << " ...something, not an exception, dunno what." << std::endl;
     }
-    MessageBox(NULL, "Failed due to an exception", "Error", MB_OK);
+
     std::cerr << "errno: " << errno << ": " << std::strerror(errno) << std::endl;
     std::abort();
 }

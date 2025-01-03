@@ -30,5 +30,5 @@ enable_testing()
 
 add_subdirectory(src/MoveGeneration)
 add_subdirectory(src/MoveEvaluation)
-#add_subdirectory(src/Visualization)
+add_subdirectory(src/Visualization)
 add_subdirectory(src/Tests)
