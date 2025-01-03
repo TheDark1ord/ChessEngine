@@ -1,4 +1,5 @@
 #include "../headers/game.h"
+#include <thread>
 
 Chess::Chess(sf::Vector2u window_size)
     : Chess(window_size, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
@@ -6,7 +7,8 @@ Chess::Chess(sf::Vector2u window_size)
 }
 
 Chess::Chess(sf::Vector2u window_size, std::string fen)
-    : fen_string(fen.c_str()), window(sf::VideoMode(window_size.x, window_size.y), "Chess"), board(new Board(window_size))
+    : fen_string(fen.c_str()), window(sf::VideoMode(window_size.x, window_size.y), "Chess"),
+      board(new Board(window_size)), cur_moves(new std::vector<movgen::Move>)
 {
     window.setFramerateLimit(60.0f);
 
@@ -15,7 +17,7 @@ Chess::Chess(sf::Vector2u window_size, std::string fen)
 
     position = movgen::board_from_fen(fen_string);
 
-    std::vector<movgen::Move> *all_moves;
+    std::vector<movgen::Move> *all_moves = new std::vector<movgen::Move>;
     std::vector<movgen::Move> **legal = &this->cur_moves;
 
     auto move_generation = [&all_moves, &legal](movgen::BoardPosition position)
@@ -26,8 +28,10 @@ Chess::Chess(sf::Vector2u window_size, std::string fen)
             std::this_thread::sleep_for(10ms);
         }
 
-        all_moves = position.side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE>(position) : movgen::generate_all_moves<movgen::BLACK>(position);
-        *legal = movgen::get_legal_moves(position, *all_moves);
+        position.side_to_move == movgen::WHITE ?
+			movgen::generate_all_moves<movgen::WHITE, movgen::GenType::ALL_MOVES>(position, all_moves) :
+			movgen::generate_all_moves<movgen::BLACK, movgen::GenType::ALL_MOVES>(position, all_moves);
+        **legal = movgen::get_legal_moves(position, *all_moves);
     };
     std::thread movegen_th(move_generation, std::ref(this->position));
 
@@ -67,8 +71,10 @@ void Chess::handle_event(sf::Event ev)
             if (!prev_moves.empty())
             {
                 movgen::undo_move(&position, prev_moves.top());
-                cur_moves = position.side_to_move == movgen::WHITE ? movgen::generate_all_moves<movgen::WHITE, movgen::GenType::ALL_MOVES>(position) : movgen::generate_all_moves<movgen::BLACK>(position);
-                cur_moves = movgen::get_legal_moves(position, *cur_moves);
+                position.side_to_move == movgen::WHITE ?
+					movgen::generate_all_moves<movgen::WHITE, movgen::GenType::ALL_MOVES>(position, cur_moves) :
+					movgen::generate_all_moves<movgen::BLACK, movgen::GenType::ALL_MOVES>(position, cur_moves);
+                *cur_moves = movgen::get_legal_moves(position, *cur_moves);
 
                 prev_moves.pop();
             }
@@ -95,7 +101,9 @@ void Chess::handle_event(sf::Event ev)
                 {
                     if (move.to == board->get_selected_square())
                     {
-                        auto game_status = movgen::make_move(&position, move, &cur_moves);
+                        movgen::make_move<movgen::GenType::ALL_MOVES>(&position, move, cur_moves);
+						auto game_status = movgen::check_game_state(&position, *cur_moves);
+
                         prev_moves.push(move);
                         board->deselect_square();
 
