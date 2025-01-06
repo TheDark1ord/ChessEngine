@@ -1,10 +1,10 @@
-
 add_executable(chess
-    WIN32
-    main.cpp
-    src/draw_board.cpp
-    
-    src/game.cpp
+	WIN32
+	main.cpp
+	src/draw_board.cpp
+	src/event_handler.cpp
+	src/game.cpp
+	${WIN32_RESOURCES}
 )
 
 #set_target_properties(chess PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
@@ -24,17 +24,15 @@ target_link_libraries(chess PRIVATE NanoSVG::nanosvg NanoSVG::nanosvgrast)
 #Include SFML
 set(SFML_STATIC_LIBRARIES TRUE)
 find_package(SFML 2.6.0
-        COMPONENTS
-            system window graphics audio
-        CONFIG
-        REQUIRED
+	COMPONENTS
+	system window graphics audio main
+	CONFIG
+	REQUIRED
 )
-find_package(wxWidgets CONFIG REQUIRED)
-target_link_libraries(chess PRIVATE wx::core wx::base)
 
 target_compile_features(chess PRIVATE cxx_std_20)
 target_compile_definitions(chess PRIVATE SFML_DYNAMIC)
-target_link_libraries(chess PRIVATE sfml-window sfml-graphics sfml-system)
+target_link_libraries(chess PRIVATE sfml-window sfml-graphics sfml-system sfml-audio sfml-main)
 
 #Move generation library
 target_link_libraries(chess PRIVATE MoveGeneration)

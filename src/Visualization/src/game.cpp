@@ -1,4 +1,7 @@
 #include "../headers/game.h"
+#include <thread>
+#include <format>
+#include <filesystem>
 
 Chess::Chess(sf::Vector2u window_size)
     : Chess(window_size, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
@@ -6,11 +9,18 @@ Chess::Chess(sf::Vector2u window_size)
 }
 
 Chess::Chess(sf::Vector2u window_size, std::string fen)
-    : fen_string(fen.c_str()), window(sf::VideoMode(window_size.x, window_size.y), "Chess"), board(new Board(window_size))
+    : fen_string(fen.c_str()), window(sf::VideoMode(window_size.x, window_size.y), "Chess")
 {
     window.setFramerateLimit(60.0f);
 
-    game_icon.loadFromFile("../data/icon.png");
+	if(std::filesystem::exists("../data"))
+		this->data_dir = "../data";
+	else
+		this->data_dir = "data";
+
+	this->board = new Board(window_size, this->data_dir);
+
+    game_icon.loadFromFile(std::format("{}/icon.png", data_dir));
     window.setIcon(game_icon.getSize().x, game_icon.getSize().y, game_icon.getPixelsPtr());
 
     position = movgen::board_from_fen(fen_string);
@@ -97,7 +107,7 @@ void Chess::handle_event(sf::Event ev)
         bool is_flipped = board->is_flipped();
 
         delete board;
-        board = new Board(window.getSize(), is_flipped);
+        board = new Board(window.getSize(),this->data_dir, is_flipped);
 
         if (selected_square != -1)
             board->select_square(selected_square % 8, selected_square / 8);

@@ -1,5 +1,4 @@
 #include <SFML/Graphics.hpp>
-#include <Windows.h>
 
 #include <cstring>
 #include <iostream>
@@ -28,7 +27,8 @@ private:
 
     sf::RenderWindow window;
     sf::Image game_icon;
-    Board *board;
+    std::string data_dir;
+    Board* board;
 
     movgen::BoardPosition position;
 
@@ -39,8 +39,4 @@ private:
 
     void handle_event(sf::Event ev);
     void display();
-
-    void make_move();
-    void undo_move();
-    void get_sel_moves();
 };
