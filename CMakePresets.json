@@ -5,7 +5,6 @@
       "name": "x64-debug",
       "displayName": "x64 Debug",
       "description": "Target Windows (64-bit) with the Visual Studio development environment. (Debug)",
-      "inherits": "windows-base",
       "architecture": {
         "value": "x64",
         "strategy": "external"

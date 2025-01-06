@@ -7,7 +7,6 @@
 #include <stack>
 
 #include "draw_board.hpp"
-#include "event_handler.hpp"
 
 #include "MoveGeneration.h"
 #include "MovgenTypes.h"
@@ -40,4 +39,8 @@ private:
 
     void handle_event(sf::Event ev);
     void display();
+
+    void make_move();
+    void undo_move();
+    void get_sel_moves();
 };

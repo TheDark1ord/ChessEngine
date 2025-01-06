@@ -64,9 +64,11 @@ namespace bitb
 
     // Common line(from edge to edge) between two squares (if exists)
     extern bitboard Line[64][64];
+
     // A line connecting two squares(includes these squares) (if exists)
     extern bitboard Between[64][64];
-    // The same as between, but not including edge squares
+
+    // Same as Between, but not including edge squares
     extern bitboard Between_in[64][64];
 
     // Get a rank or a file of a given square

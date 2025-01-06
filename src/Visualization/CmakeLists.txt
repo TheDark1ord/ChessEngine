@@ -3,7 +3,7 @@ add_executable(chess
     WIN32
     main.cpp
     src/draw_board.cpp
-    src/event_handler.cpp
+    
     src/game.cpp
 )
 
@@ -28,7 +28,9 @@ find_package(SFML 2.6.0
             system window graphics audio
         CONFIG
         REQUIRED
-    )
+)
+find_package(wxWidgets CONFIG REQUIRED)
+target_link_libraries(chess PRIVATE wx::core wx::base)
 
 target_compile_features(chess PRIVATE cxx_std_20)
 target_compile_definitions(chess PRIVATE SFML_DYNAMIC)

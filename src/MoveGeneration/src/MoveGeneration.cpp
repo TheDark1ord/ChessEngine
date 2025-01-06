@@ -473,7 +473,9 @@ movgen::GameStatus movgen::make_move(movgen::BoardPosition *pos, movgen::Move &m
     const uint16_t us = cur_color == movgen::BLACK ? 8 : 0;
     const uint16_t them = cur_color == movgen::BLACK ? 0 : 8;
 
-    const movgen::Piece captured = move.get_type() == movgen::EN_PASSANT ? static_cast<movgen::Piece>(movgen::B_PAWN + them) : movgen::get_piece(*pos, move.to);
+    const movgen::Piece captured = move.get_type() == movgen::EN_PASSANT ?
+        static_cast<movgen::Piece>(movgen::B_PAWN + them) :
+        movgen::get_piece(*pos, move.to);
 
     pos->hash = new BoardHash(pos->hash);
     pos->hash->key ^= zobrist::side;

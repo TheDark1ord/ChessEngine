@@ -1,5 +1,6 @@
 #include "../headers/draw_board.hpp"
 #include <cassert>
+#include <math.h>
 
 Board::Board(sf::Vector2u window_size, bool flipped)
     : flipped(flipped)
@@ -7,7 +8,7 @@ Board::Board(sf::Vector2u window_size, bool flipped)
     this->window_size = window_size;
     label_font.loadFromFile("../data/inconsolata.ttf");
 
-    squares.setUsage(sf::VertexBuffer::Static);
+    squares.setUsage(sf::VertexBuffer::Dynamic);
     squares.setPrimitiveType(sf::Quads);
     squares.create(64 * 4);
 
@@ -78,6 +79,35 @@ void Board::draw_piece_moves(sf::RenderWindow *window, std::vector<movgen::Move>
     }
 }
 
+void Board::draw_check(sf::RenderWindow* window, uint16_t check_square)
+{
+    const sf::Color inner_color = sf::Color(235, 25, 25, 200);
+    const sf::Color outer_color = sf::Color(235, 25, 25, 0);
+
+    const float radius = square_size / 2.0f;
+    const sf::Vector2f center_pos = board_to_screen({
+            square_size * (check_square % 8) - radius,
+            square_size * (check_square / 8) - radius,
+        });
+
+    sf::VertexArray circle(sf::TriangleStrip, 50);
+    
+    for (size_t i = 0; i < circle.getVertexCount(); i += 2)
+    {
+        float angle = 2 * 3.14 * (i / float(circle.getVertexCount() - 2));
+
+        circle[i].position = center_pos;
+        circle[i].color = inner_color;
+
+        circle[i + 1].position = {
+            center_pos.x + cos(angle) * radius,
+            center_pos.y + sin(angle) * radius };
+        circle[i + 1].color = outer_color;
+    }
+
+    window->draw(circle);
+}
+
 void Board::flip_board()
 {
     this->flipped = !this->flipped;
@@ -106,27 +136,35 @@ void Board::select_square(int x_pos, int y_pos)
     assert(x_pos < 8 && x_pos >= 0 && y_pos < 8 && y_pos >= 0);
 
     int new_select = y_pos * 8 + x_pos;
+    const sf::Color sel_col = choose_color(new_select, selected_dark, selected_light);
+
     if (new_select == this->selected_square)
     {
+        update_squares(this->selected_square, NO_SQUARE);
         this->selected_square = -1;
     }
     else
     {
+        update_squares(this->selected_square, new_select, sel_col);
         this->selected_square = new_select;
     }
-
-    this->place_squares();
 }
 
 void Board::deselect_square()
 {
+    update_squares(this->selected_square, NO_SQUARE);
     this->selected_square = -1;
-    this->place_squares();
 }
 
 int Board::get_selected_square()
 {
     return this->selected_square;
+}
+
+void Board::highlight_prev_move(uint16_t old_index, uint16_t new_index)
+{
+    const sf::Color col = choose_color(new_index, prev_move_dark, prev_move_light);
+    update_squares(old_index, new_index, col);
 }
 
 sf::Vector2f Board::screen_to_board(sf::Vector2f screen_pos)
@@ -183,6 +221,11 @@ float Board::get_square_size()
 float Board::get_size()
 {
     return board_size;
+}
+
+sf::Color Board::choose_color(uint16_t square_index, sf::Color dark, sf::Color bright)
+{
+    return (square_index % 2) ^ (square_index % 16 >= 8) ? dark : bright;
 }
 
 void Board::place_border()
@@ -247,37 +290,60 @@ void Board::place_labels()
 void Board::place_squares()
 {
     sf::Color cur_col;
-    sf::Vertex *squares = new sf::Vertex[64 * 4];
+
+    if (this->square_vertex != nullptr)
+        delete[] this->square_vertex;
+    this->square_vertex = new sf::Vertex[64 * 4];
 
     for (int i = 0; i < 64; i++)
     {
-        squares[i * 4 + 0].position = {
+        this->square_vertex[i * 4 + 0].position = {
             board_offset.x + (i % 8 + 0) * (square_size),
             board_offset.y + (i / 8 + 0) * (square_size)};
-        squares[i * 4 + 1].position = {
+        this->square_vertex[i * 4 + 1].position = {
             board_offset.x + (i % 8 + 1) * (square_size),
             board_offset.y + (i / 8 + 0) * (square_size)};
-        squares[i * 4 + 2].position = {
+        this->square_vertex[i * 4 + 2].position = {
             board_offset.x + (i % 8 + 1) * (square_size),
             board_offset.y + (i / 8 + 1) * (square_size)};
-        squares[i * 4 + 3].position = {
+        this->square_vertex[i * 4 + 3].position = {
             board_offset.x + (i % 8 + 0) * (square_size),
             board_offset.y + (i / 8 + 1) * (square_size)};
 
-        cur_col = (i % 2) ^ (i % 16 >= 8) ? board_green : board_pale;
+        cur_col = choose_color(i, board_green, board_pale);
 
-        if (flipped && i == this->selected_square ||
-            !flipped && (63 - i) == this->selected_square)
-        {
-            cur_col = (i % 2) ^ (i % 16 >= 8) ? selected_dark : selected_light;
-        }
-
-        squares[i * 4 + 0].color = cur_col;
-        squares[i * 4 + 1].color = cur_col;
-        squares[i * 4 + 2].color = cur_col;
-        squares[i * 4 + 3].color = cur_col;
+        this->square_vertex[i * 4 + 0].color = cur_col;
+        this->square_vertex[i * 4 + 1].color = cur_col;
+        this->square_vertex[i * 4 + 2].color = cur_col;
+        this->square_vertex[i * 4 + 3].color = cur_col;
     }
-    this->squares.update(squares);
+    this->squares.update(this->square_vertex);
+}
+
+void Board::update_squares(uint16_t reset_pos, uint16_t set_pos, sf::Color set_col)
+{
+    reset_pos = reset_pos == NO_SQUARE ? reset_pos : 63 - reset_pos;
+    set_pos = set_pos == NO_SQUARE ? set_pos : 63 - set_pos;
+
+    const sf::Color reset_col = choose_color(reset_pos, board_green, board_pale);
+
+    if (reset_pos != UINT16_MAX)
+    {
+        this->square_vertex[reset_pos * 4 + 0].color = reset_col;
+        this->square_vertex[reset_pos * 4 + 1].color = reset_col;
+        this->square_vertex[reset_pos * 4 + 2].color = reset_col;
+        this->square_vertex[reset_pos * 4 + 3].color = reset_col;
+    }
+
+    if (set_pos != UINT16_MAX)
+    {
+        this->square_vertex[set_pos * 4 + 0].color = set_col;
+        this->square_vertex[set_pos * 4 + 1].color = set_col;
+        this->square_vertex[set_pos * 4 + 2].color = set_col;
+        this->square_vertex[set_pos * 4 + 3].color = set_col;
+    }
+
+    this->squares.update(this->square_vertex);
 }
 
 void Board::draw_pieces(sf::RenderWindow *window, movgen::BoardPosition *pos)

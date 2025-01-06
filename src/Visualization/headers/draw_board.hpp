@@ -13,8 +13,13 @@
 #define board_pale sf::Color(238, 238, 210)
 #define board_yellow sf::Color(186, 202, 68)
 
-#define selected_light sf::Color(225, 234, 162)
-#define selected_dark sf::Color(165, 190, 101)
+#define prev_move_light sf::Color(225, 234, 162)
+#define prev_move_dark sf::Color(165, 190, 101)
+
+#define selected_light sf::Color(157, 244, 233)
+#define selected_dark sf::Color(97, 200, 171)
+
+#define NO_SQUARE UINT16_MAX
 
 /// Let's call it margin of the graphics relative to the board size
 // This scale of the first outline
@@ -37,6 +42,7 @@ public:
   void resize(sf::Vector2u new_window_size);
   void draw_board(sf::RenderWindow *window, movgen::BoardPosition *pos);
   void draw_piece_moves(sf::RenderWindow *window, std::vector<movgen::Move> &moves);
+  void draw_check(sf::RenderWindow* window, uint16_t check_square);
 
   void flip_board();
   bool is_flipped();
@@ -45,6 +51,8 @@ public:
   void select_square(int x_pos, int y_pos);
   void deselect_square();
   int get_selected_square();
+
+  void highlight_prev_move(uint16_t old_index, uint16_t new_index);
 
   // Practically usless now< but may become useeful later
   sf::Vector2f screen_to_board(sf::Vector2f screen_pos);
@@ -56,6 +64,8 @@ public:
   float get_size();
 
 private:
+    sf::Color choose_color(uint16_t square_index, sf::Color dark, sf::Color bright);
+
   // Theese functions adjust settings for the
   // entities below, but do not draw any of them.
   // This way I do not have to change theese settings for
@@ -63,6 +73,8 @@ private:
   void place_border();
   void place_labels();
   void place_squares();
+
+  void update_squares(uint16_t reset_pos, uint16_t set_pos, sf::Color set_col = sf::Color::Transparent);
 
   sf::Font label_font;
   sf::Text char_label;
@@ -72,6 +84,7 @@ private:
   sf::RectangleShape outer;
 
   sf::VertexBuffer squares;
+  sf::Vertex *square_vertex = nullptr;
 
   // TODO: add bitboard struct reference
   void draw_pieces(sf::RenderWindow *window, movgen::BoardPosition *pos);
