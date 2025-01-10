@@ -1,0 +1,147 @@
+Return-Path: <rubcov23033@gmail.com>
+Received: from localhost.localdomain ([31.134.188.118])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5d9903c3039sm2039757a12.40.2025.01.10.12.13.21
+        for <rubcov23033@gmail.com>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Jan 2025 12:13:22 -0800 (PST)
+From: rubcov23033@gmail.com
+To: rubcov23033@gmail.com
+Subject: [PATCH] Added boost-process library
+Date: Fri, 10 Jan 2025 23:12:56 +0300
+Message-ID: <20250110201302.1671-1-rubcov23033@gmail.com>
+X-Mailer: git-send-email 2.45.2.windows.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+
+From: Andlepiha <rubcov23033@gmail.com>
+
+---
+ CMakeLists.txt                   |  4 ++--
+ src/Visualization/CMakeLists.txt |  3 +++
+ src/Visualization/headers/game.h | 23 +++++++++++++++++++----
+ src/Visualization/src/game.cpp   | 19 +++++++++++++++++++
+ vcpkg.json                       |  3 ++-
+ 5 files changed, 45 insertions(+), 7 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 010d4f6..ab47c6d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ cmake_minimum_required(VERSION 3.23.0)
+ 
+-#include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+-set(CMAKE_TOOLCHAIN_FILE "/etc/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
++set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
++#set(CMAKE_TOOLCHAIN_FILE "/etc/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+ #set(CMAKE_TOOLCHAIN_FILE "C:\\Users\\rubco\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+ 
+ set(CMAKE_CXX_STANDARD 23)
+diff --git a/src/Visualization/CMakeLists.txt b/src/Visualization/CMakeLists.txt
+index a4a49ef..4e1cb84 100644
+--- a/src/Visualization/CMakeLists.txt
++++ b/src/Visualization/CMakeLists.txt
+@@ -37,3 +37,6 @@ target_link_libraries(chess PRIVATE sfml-window sfml-graphics sfml-system sfml-m
+ #Move generation library
+ target_link_libraries(chess PRIVATE MoveGeneration)
+ target_include_directories(chess PRIVATE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/include")
++
++find_package(Boost COMPONENTS process CONFIG REQUIRED)
++target_link_libraries(chess PRIVATE Boost::process)
+diff --git a/src/Visualization/headers/game.h b/src/Visualization/headers/game.h
+index 760b646..75cbb8a 100644
+--- a/src/Visualization/headers/game.h
++++ b/src/Visualization/headers/game.h
+@@ -1,9 +1,7 @@
+ #include <SFML/Graphics.hpp>
+ 
+-#include <cstring>
+-#include <iostream>
+-#include <chrono>
+ #include <stack>
++#include <boost/process.hpp>
+ 
+ #include "draw_board.hpp"
+ #include "event_handler.hpp"
+@@ -12,6 +10,8 @@
+ #include "MovgenTypes.h"
+ #include "MagicNumbers.h"
+ 
++#include <Windows.h>
++
+ using namespace std::chrono_literals;
+ 
+ class Chess
+@@ -39,4 +39,19 @@ private:
+ 
+     void handle_event(sf::Event ev);
+     void display();
+-};
+\ No newline at end of file
++};
++
++class EngineChildProcess
++{
++public:
++	EngineChildProcess();
++
++	std::string engine_search(std::string fen);
++
++private:
++	const char* engine_exe_path = ".\\engine.exe";
++
++	//Child process io
++	HANDLE hChildStdInWrite, hChildStdOutRead;
++	void create_child_process();
++};
+diff --git a/src/Visualization/src/game.cpp b/src/Visualization/src/game.cpp
+index 6f8dbd4..279a755 100644
+--- a/src/Visualization/src/game.cpp
++++ b/src/Visualization/src/game.cpp
+@@ -1,6 +1,10 @@
+ #include "../headers/game.h"
+ #include <thread>
+ 
++#include <cstring>
++#include <iostream>
++#include <chrono>
++
+ Chess::Chess(sf::Vector2u window_size)
+     : Chess(window_size, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+ {
+@@ -188,3 +192,18 @@ void Chess::display()
+ 
+     window.display();
+ }
++
++EngineChildProcess::EngineChildProcess()
++{
++
++}
++
++std::string EngineChildProcess::engine_search(std::string fen)
++{
++
++}
++
++void EngineChildProcess::create_child_process()
++{
++
++}
+diff --git a/vcpkg.json b/vcpkg.json
+index 07688d2..0c69d45 100755
+--- a/vcpkg.json
++++ b/vcpkg.json
+@@ -2,7 +2,8 @@
+   "dependencies": [
+     "sfml",
+     "nanosvg",
+-    "spdlog"
++    "spdlog",
++	"boost-process"
+   ],
+   "overrides": [
+     {
+-- 
+2.45.2.windows.1
+

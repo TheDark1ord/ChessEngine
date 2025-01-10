@@ -14,7 +14,7 @@ Chess::Chess(sf::Vector2u window_size, std::string fen, GameMode mode)
 {
 	game_icon.loadFromFile("../data/icon.png");
 	window.setIcon(game_icon.getSize().x, game_icon.getSize().y, game_icon.getPixelsPtr());
-	window.setFramerateLimit(60.0f); 
+	window.setFramerateLimit(60.0f);
 
 	position = movgen::board_from_fen(fen_string);
 
@@ -207,4 +207,19 @@ void Chess::display()
 		board->draw_piece_moves(&window, selected_piece_moves);
 
 	window.display();
+}
+
+EngineChildProcess::EngineChildProcess()
+{
+
+}
+
+std::string EngineChildProcess::engine_search(std::string fen)
+{
+
+}
+
+void EngineChildProcess::create_child_process()
+{
+
 }

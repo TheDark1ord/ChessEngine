@@ -1,9 +1,7 @@
 #include <SFML/Graphics.hpp>
 
-#include <cstring>
-#include <iostream>
-#include <chrono>
 #include <stack>
+#include <boost/process.hpp>
 
 #include "draw_board.hpp"
 #include "event_handler.hpp"
@@ -11,6 +9,8 @@
 #include "MoveGeneration.h"
 #include "MovgenTypes.h"
 #include "MagicNumbers.h"
+
+#include <Windows.h>
 
 using namespace std::chrono_literals;
 
@@ -57,4 +57,19 @@ private:
 
     
     void display();
+};
+
+class EngineChildProcess
+{
+public:
+	EngineChildProcess();
+
+	std::string engine_search(std::string fen);
+
+private:
+	const char* engine_exe_path = ".\\engine.exe";
+
+	//Child process io
+	HANDLE hChildStdInWrite, hChildStdOutRead;
+	void create_child_process();
 };
