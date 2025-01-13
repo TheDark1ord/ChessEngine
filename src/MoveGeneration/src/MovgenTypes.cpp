@@ -228,25 +228,70 @@ EnPassant:
 
 std::string movgen::board_to_fen(movgen::BoardPosition& pos)
 {
-	// TODO: board_to_fen
-	throw std::runtime_error("Not implemented");
-	return std::string();
-}
+	std::string fen;
 
-movgen::MoveType movgen::Move::get_type() const
-{
-	if(this->move_data == 0)
-		return movgen::REGULAR;
-	else if(this->move_data & 0x200)
-		return movgen::EN_PASSANT;
-	else if(this->move_data & 0x0F)
-		return this->move_data & 0xF0 ? movgen::PROMOTION_CAPTURE : movgen::CAPTURE;
-	else if(this->move_data & 0xF0)
-		return movgen::PROMOTION;
-	else if(this->move_data & 0x100)
-		return movgen::DOUBLE_MOVE;
+	int emptyConsec = 0;
+	for(int row = 7; row >= 0; row--)
+	{
+		for(int column = 7; column >= 0; column--)
+		{
+			movgen::Piece piece = pos.squares[row * 8 + column];
+			movgen::PieceType piece_type = movgen::get_piece_type(piece);
+
+			if (piece == movgen::Piece::NO_PIECE)
+			{
+				emptyConsec++;
+				continue;
+			}
+			movgen::Color piece_color = movgen::get_piece_color(piece);
+			if (emptyConsec != 0)
+			{
+				fen += std::to_string(emptyConsec);
+				emptyConsec = 0;
+			}
+
+			fen += piece_color == movgen::BLACK ?
+				movgen::Move::piece_str[piece_type] :
+				std::toupper(movgen::Move::piece_str[piece_type]);
+		}
+		if (emptyConsec != 0) {
+			fen += std::to_string(emptyConsec);
+			emptyConsec = 0;
+		}
+		fen += '/';
+	}
+	// Delete last slash
+	fen.pop_back();
+	fen += ' ';
+
+	fen += pos.side_to_move == movgen::WHITE ? 'w' : 'b';
+	fen += ' ';
+
+	if(pos.hash->castling_rights | movgen::WHITE_SHORT)
+		fen += 'K';
+	if(pos.hash->castling_rights | movgen::WHITE_LONG)
+		fen += 'Q';
+	if(pos.hash->castling_rights | movgen::BLACK_SHORT)
+		fen += 'k';
+	if(pos.hash->castling_rights | movgen::BLACK_LONG)
+		fen += 'q';
+
+	if(pos.hash->castling_rights == movgen::NO_CASTLING)
+		fen += '-';
+	fen += ' ';
+
+	if (pos.hash->en_passant != 0)
+		fen += movgen::Move::squares[pos.hash->en_passant];
 	else
-		return movgen::CASTLING;
+		fen += '-';
+	fen += ' ';
+
+
+	fen += std::to_string(pos.hash->ply);
+	fen += ' ';
+	fen += std::to_string(pos.fullmove);
+
+	return fen;
 }
 
 movgen::Piece movgen::get_piece(BoardPosition& b_pos, bpos pos)
@@ -293,8 +338,28 @@ movgen::Move::Move(Piece piece,
 	this->move_data |= castling << 10;
 }
 
+movgen::MoveType movgen::Move::get_type() const
+{
+	assert(!is_null_instance);
+
+	if(this->move_data == 0)
+		return movgen::REGULAR;
+	else if(this->move_data & 0x200)
+		return movgen::EN_PASSANT;
+	else if(this->move_data & 0x0F)
+		return this->move_data & 0xF0 ? movgen::PROMOTION_CAPTURE : movgen::CAPTURE;
+	else if(this->move_data & 0xF0)
+		return movgen::PROMOTION;
+	else if(this->move_data & 0x100)
+		return movgen::DOUBLE_MOVE;
+	else
+		return movgen::CASTLING;
+}
+
 movgen::Piece movgen::Move::get_captured() const
 {
+	assert(!is_null_instance);
+
 	// En-passant
 	if(this->move_data & 0x200)
 		return movgen::get_piece_from_type(
@@ -305,22 +370,35 @@ movgen::Piece movgen::Move::get_captured() const
 
 movgen::PieceType movgen::Move::get_promoted() const
 {
+	assert(!is_null_instance);
+
 	return static_cast<movgen::PieceType>((this->move_data >> 4) & 0x0F);
+}
+
+movgen::Move movgen::Move::return_null()
+{
+	Move instance(movgen::Piece::NO_PIECE, 0, 0);
+	instance.is_null_instance = true;
+
+	return instance;
 }
 
 movgen::Move::operator std::string()
 {
-	static const char* const squares[]{
-		"h1", "g1", "f1", "e1", "d1", "c1", "b1", "a1", "h2", "g2", "f2", "e2", "d2",
-		"c2", "b2", "a2", "h3", "g3", "f3", "e3", "d3", "c3", "b3", "a3", "h4", "g4",
-		"f4", "e4", "d4", "c4", "b4", "a4", "h5", "g5", "f5", "e5", "d5", "c5", "b5",
-		"a5", "h6", "g6", "f6", "e6", "d6", "c6", "b6", "a6", "h7", "g7", "f7", "e7",
-		"d7", "c7", "b7", "a7", "h8", "g8", "f8", "e8", "d8", "c8", "b8", "a8",
-	};
-	return static_cast<std::string>(squares[from]) + squares[to];
+	std::string move_str = squares[from];
+
+	if (this->get_captured() != 0)
+		move_str += piece_str[movgen::get_piece_type(this->get_captured())];
+
+	move_str += squares[to];
+
+	if (this->get_promoted() != 0)
+		move_str += piece_str[this->get_promoted()];
+
+	return move_str;
 }
 
-void movgen::BoardPosition::print() 
+void movgen::BoardPosition::print()
 {
     const char* pieces[]{
 		" ", //NO_PIECE

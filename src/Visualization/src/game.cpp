@@ -1,5 +1,10 @@
 #include "../headers/game.h"
+
+#include "MoveGeneration.h"
+#include "MagicNumbers.h"
+
 #include <thread>
+
 
 Chess::Chess(sf::Vector2u window_size, GameMode mode)
 	: Chess(window_size, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", mode)
@@ -7,10 +12,10 @@ Chess::Chess(sf::Vector2u window_size, GameMode mode)
 
 Chess::Chess(sf::Vector2u window_size, std::string fen, GameMode mode)
 	: fen_string(fen.c_str()),
-	  window(sf::VideoMode(window_size.x, window_size.y), "Chess"),
+window(sf::VideoMode(window_size.x, window_size.y), "Chess"),
 	  board(new Board(window_size)),
 	  cur_moves(new std::vector<movgen::Move>),
-	  mode(mode),
+	  mode(mode)
 {
 	game_icon.loadFromFile("../data/icon.png");
 	window.setIcon(game_icon.getSize().x, game_icon.getSize().y, game_icon.getPixelsPtr());
@@ -21,7 +26,7 @@ Chess::Chess(sf::Vector2u window_size, std::string fen, GameMode mode)
 	std::vector<movgen::Move>* all_moves = new std::vector<movgen::Move>;
 	std::vector<movgen::Move>** legal_moves = &this->cur_moves;
 
-	auto move_generation = [&all_moves, &legal_moves](movgen::BoardPosition position) {
+	auto move_generation = [all_moves, legal_moves](movgen::BoardPosition position) {
 		// Wait for all modules to initialize
 		while(!movgen::initialized || !bitb::initialized || !movgen::initialized_magics)
 		{
@@ -35,8 +40,29 @@ Chess::Chess(sf::Vector2u window_size, std::string fen, GameMode mode)
 	};
 	std::thread movegen_thread(move_generation, std::ref(this->position));
 
+	if(mode == GameMode::PlayerVEngine)
+	{
+		this->engine = new EngineChildProcess();
+
+		//Flip a coin to determine player side
+		std::srand(std::time(NULL));
+		// Player is white
+		if((std::rand() % 2 + 1) == 1)
+			players_turn = true;
+		else
+		{
+			this->board->flip_board();
+		}
+
+		if(mode == GameMode::PlayerVEngine && !players_turn)
+		{
+			std::thread th(std::bind(&Chess::handle_engine_move, this));
+			th.detach();
+		}
+	}
+
 	display();
-	movegen_thread.join();
+	movegen_thread.detach();
 }
 
 void Chess::loop()
@@ -53,11 +79,52 @@ void Chess::loop()
 	}
 }
 
+void Chess::handle_engine_move()
+{
+	std::string engine_move;
+	while((engine_move = engine->engine_search(movgen::board_to_fen(position))) == "")
+		std::this_thread::sleep_for(2ms);
+
+	//Construct move from string
+	bpos from, to;
+	unsigned char capture, promotion;
+	from = (engine_move[1] - '1') * 8 + engine_move[0] - 'a';
+
+	if (engine_move[2] == 'x')
+	{
+		to = (engine_move[4] - '1') * 8 + engine_move[3] - 'a';
+		capture = movgen::get_piece(position, to);
+	}
+	else
+		to = (engine_move[3] - '1') * 8 + engine_move[2] - 'a';
+
+	//Last character is promotion specifier
+	if(!std::isdigit(engine_move.back()))
+		promotion = std::distance(
+				std::begin(movgen::Move::piece_str),
+				std::find(
+					std::begin(movgen::Move::piece_str),
+					std::end(movgen::Move::piece_str),
+					engine_move.back()
+			)
+		);
+
+	movgen::Move final_move(
+			movgen::get_piece(position, from),
+			from,
+			to,
+			capture,
+			promotion
+	);
+	move_piece(final_move);
+}
+
 void Chess::handle_event(sf::Event ev)
 {
 	switch(ev.type)
 	{
 	case sf::Event::Closed:
+		engine->~EngineChildProcess();
 		window.close();
 		break;
 
@@ -121,11 +188,17 @@ void Chess::handle_left_button_press()
 
 	if(!board->within_bounds(mouse_pos.x, mouse_pos.y))
 		return;
+	if(this->mode == GameMode::PlayerVEngine && !players_turn)
+		return;
+	if(!movgen::initialized || !bitb::initialized || !movgen::initialized_magics)
+		return;
 
 	if(board->get_selected_square() != -1 && !selected_piece_moves.empty())
 	{
 		board->select_square(mouse_pos);
-		move_piece();
+		for(auto move : selected_piece_moves)
+			if(move.to == board->get_selected_square())
+				move_piece(move);
 	}
 	else
 		board->select_square(mouse_pos);
@@ -133,33 +206,33 @@ void Chess::handle_left_button_press()
 	update_piece_moves_highlight();
 }
 
-void Chess::move_piece()
+void Chess::move_piece(movgen::Move move)
 {
-	for(auto move : selected_piece_moves)
+	movgen::make_move<movgen::GenType::ALL_MOVES>(&position, move, cur_moves);
+	auto game_status = movgen::check_game_state(&position, *cur_moves);
+
+	players_turn ^= 1;
+	prev_moves.push(move);
+	board->deselect_square();
+
+	switch(game_status)
 	{
-		if(move.to == board->get_selected_square())
-		{
-			movgen::make_move<movgen::GenType::ALL_MOVES>(&position, move, cur_moves);
-			auto game_status = movgen::check_game_state(&position, *cur_moves);
-
-			prev_moves.push(move);
-			board->deselect_square();
-
-			switch(game_status)
+		case movgen::GAME_CONTINUES:
+			if(mode == GameMode::PlayerVEngine && !players_turn)
 			{
-			case movgen::GAME_CONTINUES:
-				break;
-			case movgen::DRAW:
-				printf("Draw\n");
-				break;
-			case movgen::BLACK_WINS:
-				printf("Black wins\n");
-				break;
-			case movgen::WHITE_WINS:
-				printf("White wins\n");
-				break;
+				std::thread th(std::bind(&Chess::handle_engine_move, this));
+				th.detach();
 			}
-		}
+			break;
+		case movgen::DRAW:
+			printf("Draw\n");
+			break;
+		case movgen::BLACK_WINS:
+			printf("Black wins\n");
+			break;
+		case movgen::WHITE_WINS:
+			printf("White wins\n");
+			break;
 	}
 }
 
@@ -210,16 +283,52 @@ void Chess::display()
 }
 
 EngineChildProcess::EngineChildProcess()
+	: engine_ready(false)
 {
+	engine_process = bp::child(
+		bp::search_path(engine_exe_path),
+		bp::std_in < engine_in,
+		bp::std_out > engine_out,
+		::boost::process::windows::create_no_window);
+	engine_process.detach();
 
+	auto check_ready = [this]() {
+		std::string ready_message;
+
+		while(true)
+		{
+			std::getline(engine_out, ready_message);
+			if (ready_message == "Initializing...\r")
+				continue;
+			if (ready_message == "Engine is ready, input a command\r")
+			{
+				engine_ready = true;
+				return;
+			}
+			throw std::runtime_error(ready_message);
+		}
+	};
+
+	std::thread check_ready_th(check_ready);
+	check_ready_th.detach();
+}
+
+EngineChildProcess::~EngineChildProcess()
+{
+	engine_process.terminate();
 }
 
 std::string EngineChildProcess::engine_search(std::string fen)
 {
+	if(!this->engine_ready)
+		return "";
 
-}
+	std::string engine_output;
+	engine_in << "position fen " << fen << std::endl;
+	engine_in << "search depth 4" << std::endl;
 
-void EngineChildProcess::create_child_process()
-{
+	std::getline(engine_out, engine_output);
+	engine_output = engine_output.substr(0, engine_output.find(':'));
 
+	return engine_output;
 }

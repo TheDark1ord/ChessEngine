@@ -36,7 +36,7 @@ constexpr bool read_bit(bitboard& b, bpos pos)
 	return b & (1ull << pos);
 }
 
-constexpr bitboard flip_vertical(bitboard b)
+inline bitboard flip_vertical(bitboard b)
 {
 	return _byteswap_uint64(b);
 }

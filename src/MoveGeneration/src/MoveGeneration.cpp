@@ -1,4 +1,4 @@
-#include "../include/MoveGeneration.h"
+﻿#include "../include/MoveGeneration.h"
 #include "../include/MagicNumbers.h"
 #include "../include/Zobrist.h"
 #include <cassert>

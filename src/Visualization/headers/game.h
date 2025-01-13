@@ -2,21 +2,40 @@
 
 #include <stack>
 #include <boost/process.hpp>
+#include <boost/process/windows.hpp>
 
 #include "draw_board.hpp"
-#include "event_handler.hpp"
 
-#include "MoveGeneration.h"
 #include "MovgenTypes.h"
-#include "MagicNumbers.h"
 
 #include <Windows.h>
 
 using namespace std::chrono_literals;
+namespace bp = boost::process;
+
 
 enum class GameMode {
     PlayerVPlayer,
     PlayerVEngine
+};
+
+class EngineChildProcess
+{
+public:
+	EngineChildProcess();
+	~EngineChildProcess();
+
+	std::atomic<bool> engine_ready;
+	std::string engine_search(std::string fen);
+
+private:
+	//Child process IO
+	bp::opstream engine_in;
+	bp::ipstream engine_out;
+
+	bp::child engine_process;
+
+	const char* engine_exe_path = ".\\engine.exe";
 };
 
 class Chess
@@ -29,6 +48,10 @@ public:
 
 private:
     GameMode mode;
+	EngineChildProcess* engine;
+	bool players_turn = false;
+
+	void handle_engine_move();
 
     const char *fen_string;
     const sf::Color bg_color = sf::Color(255, 255, 240);
@@ -40,7 +63,6 @@ private:
     movgen::BoardPosition position;
 
     std::stack<movgen::Move> prev_moves;
-
     std::vector<movgen::Move>* cur_moves;
     std::vector<movgen::Move> selected_piece_moves;
 
@@ -50,26 +72,11 @@ private:
     void reset_move();
 
     void handle_left_button_press();
-    void move_piece();
+    void move_piece(movgen::Move move);
     void update_piece_moves_highlight();
 
     void handle_resized_event(sf::Event::SizeEvent size);
 
-    
     void display();
 };
 
-class EngineChildProcess
-{
-public:
-	EngineChildProcess();
-
-	std::string engine_search(std::string fen);
-
-private:
-	const char* engine_exe_path = ".\\engine.exe";
-
-	//Child process io
-	HANDLE hChildStdInWrite, hChildStdOutRead;
-	void create_child_process();
-};

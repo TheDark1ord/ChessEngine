@@ -21,7 +21,7 @@ int main()
 
     try
     {
-        Chess chess({ 1000, 1000 });
+        Chess chess({ 1000, 1000 }, GameMode::PlayerVEngine);
         chess.loop();
     }
     catch (std::exception ex)

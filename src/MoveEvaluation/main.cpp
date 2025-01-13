@@ -55,7 +55,7 @@ int main() {
     {
         static std::string line;
 
-        printf(">");
+        //printf(">");
         std::getline(std::cin, line);
         std::vector<std::string> split_line = split_string(line, " ");
 
