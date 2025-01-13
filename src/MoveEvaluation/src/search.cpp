@@ -206,26 +206,32 @@ float __minmax(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves,
 	return best_value;
 }
 
+// Implement Quiescence Search
 // Search only captures, for indefinite depth
 template <_SearchType type>
 float _minmax_captures(movgen::BoardPosition* pos, float alpha, float beta)
 {
+	float score, best_value;
+
+	if(type == _SearchType::MAX)
+		score = eval(*pos);
+	else
+		score = -eval(*pos);
+
+	if(score >= beta)
+		return score;
+	if(alpha < score)
+		alpha = score;
+
+	best_value = score;
+
 	std::vector<movgen::Move> pseudo_legal, new_moves;
 	if(type == _SearchType::MAX)
-		movgen::generate_all_moves<movgen::WHITE, movgen::GenType::CAPTURES>(*pos, &pseudo_legal);
-	else
 		movgen::generate_all_moves<movgen::BLACK, movgen::GenType::CAPTURES>(*pos, &pseudo_legal);
+	else
+		movgen::generate_all_moves<movgen::WHITE, movgen::GenType::CAPTURES>(*pos, &pseudo_legal);
 	new_moves = movgen::get_legal_moves(*pos, pseudo_legal);
 
-	if(new_moves.empty())
-	{
-		if(type == _SearchType::MAX)
-			return eval(*pos);
-		else
-			return -eval(*pos);
-	}
-
-	float score, best_value = 0;
 	for(auto& move : new_moves)
 	{
 		movgen::make_move(pos, move, nullptr);
@@ -240,28 +246,12 @@ float _minmax_captures(movgen::BoardPosition* pos, float alpha, float beta)
 		_transposition_table.emplace(std::make_pair(pos->hash->key, _TranspositionTableRow({score})));
 		movgen::undo_move(pos, move);
 
-		if(type == _SearchType::MAX)
-		{
-			if(score > best_value)
-			{
-				if(score > alpha)
-					alpha = score; // alpha acts like max in MiniMax
-				best_value = alpha;
-			}
-			if(score >= beta)
-				return score; // fail soft beta-cutoff
-		}
-		else
-		{
-			if(score < best_value)
-			{
-				if(score < beta)
-					beta = score; // beta acts like min in MiniMax
-				best_value = score;
-			}
-			if(score <= alpha)
-				return score; // fail soft alpha-cutoffs
-		}
+		if(score >= beta)
+			return score;
+		if(score > best_value)
+			best_value = score;
+		if(score > alpha)
+			alpha = score;
 	}
 	return best_value;
 }

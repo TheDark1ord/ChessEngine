@@ -6,7 +6,7 @@ constexpr bitboard center = 0x1818000000; // Valued at 0.1 points
 float eval(movgen::BoardPosition& pos)
 {
 	// (pos.side_to_move * 2 - 1) -- map side to move to [-1;+1]
-	return (_eval_white(pos) - _eval_black(pos)) * (pos.side_to_move * 2 - 1);
+	return (_eval_white(pos) - _eval_black(pos)) * (!pos.side_to_move * 2 - 1);
 }
 
 static float _eval_white(movgen::BoardPosition& pos)
