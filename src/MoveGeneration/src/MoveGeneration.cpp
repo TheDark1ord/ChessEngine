@@ -514,8 +514,8 @@ std::vector<movgen::Move> movgen::get_legal_moves(BoardPosition& pos, std::vecto
 	const bpos ksq = bitb::pop_lsb(pos.pieces[B_KING + us]);
 
 	const bitboard attacked = (pos.side_to_move == movgen::WHITE)
-								  ? (pos.info->b_piece_attacks & pos.info->b_pawn_attacks & pos.info->b_king_attacks)
-								  : (pos.info->w_piece_attacks & pos.info->w_pawn_attacks & pos.info->w_king_attacks);
+								  ? (pos.info->b_piece_attacks | pos.info->b_pawn_attacks | pos.info->b_king_attacks)
+								  : (pos.info->w_piece_attacks | pos.info->w_pawn_attacks | pos.info->w_king_attacks);
 
 	std::vector<movgen::Move> legal_moves;
 	legal_moves.reserve(generated.size());
