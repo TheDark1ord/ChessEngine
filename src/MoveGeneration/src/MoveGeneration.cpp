@@ -462,18 +462,18 @@ void movgen::generate_all_moves(BoardPosition& pos, std::vector<movgen::Move>* m
 	{
 	case movgen::GenType::ALL_MOVES:
 	case movgen::GenType::QUIETS:
-	case movgen::GenType::CAPTURES:
+	case movgen::GenType::CAPTURES: // Follow LVA(Least Valuble aggressor heuristic)
+		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
 		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KING, color)]))
 			generate_piece_moves<movgen::KING, gen_type>(piece_pos, pos, color, moves);
-		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::QUEEN, color)]))
-			generate_piece_moves<movgen::QUEEN, gen_type>(piece_pos, pos, color, moves);
-		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::ROOK, color)]))
-			generate_piece_moves<movgen::ROOK, gen_type>(piece_pos, pos, color, moves);
 		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::BISHOP, color)]))
 			generate_piece_moves<movgen::BISHOP, gen_type>(piece_pos, pos, color, moves);
 		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KNIGHT, color)]))
 			generate_piece_moves<movgen::KNIGHT, gen_type>(piece_pos, pos, color, moves);
-		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
+		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::QUEEN, color)]))
+			generate_piece_moves<movgen::QUEEN, gen_type>(piece_pos, pos, color, moves);
+		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::ROOK, color)]))
+			generate_piece_moves<movgen::ROOK, gen_type>(piece_pos, pos, color, moves);
 		break;
 	case movgen::GenType::PROMOTIONS:
 		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
@@ -524,15 +524,9 @@ std::vector<movgen::Move> movgen::get_legal_moves(BoardPosition& pos, std::vecto
 	if(pos.info->checks_num >= 2)
 	{
 		for(Move move : generated)
-		{
 			if(move.from == ksq && move.get_type() != CASTLING)
-			{
 				if(!(attacked & bitb::sq_bitb(move.to)))
-				{
 					legal_moves.push_back(move);
-				}
-			}
-		}
 		return legal_moves;
 	}
 	// Only allow king moves and blockers
@@ -553,7 +547,7 @@ std::vector<movgen::Move> movgen::get_legal_moves(BoardPosition& pos, std::vecto
 
 	for(Move move : generated)
 	{
-		// Check for legality only if one these 4 requirements is met
+		// Check for legality only if one these 4 requirements are met
 		if(!(bitb::sq_bitb(move.from) & pinned || move.from == ksq || move.get_type() == EN_PASSANT) || _is_legal(pos, move))
 			legal_moves.push_back(move);
 	}

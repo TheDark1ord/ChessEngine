@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 	std::vector<movgen::Move> legal_moves = movgen::get_legal_moves(initial_position, cur_moves);
 	cur_moves = legal_moves;
 
-	// If any moves are specified as additional arguments, make that moves
+	// If any moves are specified as additional arguments, make these moves
 	int initial_depth = 0;
 	for(int i = 3; i < argc; i++)
 	{
