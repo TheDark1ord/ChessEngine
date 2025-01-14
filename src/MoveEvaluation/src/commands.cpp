@@ -160,7 +160,6 @@ std::vector<movgen::Move> _generate_moves()
 		throw std::runtime_error("Please initialise a position\n");
 
 	std::vector<movgen::Move> pseudo_moves;
-
 	_saved_pos.side_to_move == movgen::WHITE
 		? movgen::generate_all_moves<movgen::WHITE, movgen::GenType::ALL_MOVES>(_saved_pos, &pseudo_moves)
 		: movgen::generate_all_moves<movgen::BLACK, movgen::GenType::ALL_MOVES>(_saved_pos, &pseudo_moves);

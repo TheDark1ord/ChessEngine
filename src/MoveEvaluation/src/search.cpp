@@ -218,12 +218,28 @@ float _minmax_captures(movgen::BoardPosition* pos, float alpha, float beta)
 	else
 		score = -eval(*pos);
 
-	if(score >= beta)
-		return score;
-	if(alpha < score)
-		alpha = score;
-
-	best_value = score;
+	if(type == _SearchType::MAX)
+	{
+		if(score > best_value)
+		{
+			if(score > alpha)
+				alpha = score; // alpha acts like max in MiniMax
+			best_value = alpha;
+		}
+		if(score >= beta)
+			return score; // fail soft beta-cutoff
+	}
+	else
+	{
+		if(score < best_value)
+		{
+			if(score < beta)
+				beta = score; // beta acts like min in MiniMax
+			best_value = score;
+		}
+		if(score <= alpha)
+			return score; // fail soft alpha-cutoffs
+	}
 
 	std::vector<movgen::Move> pseudo_legal, new_moves;
 	if(type == _SearchType::MAX)
@@ -246,12 +262,28 @@ float _minmax_captures(movgen::BoardPosition* pos, float alpha, float beta)
 		_transposition_table.emplace(std::make_pair(pos->hash->key, _TranspositionTableRow({score})));
 		movgen::undo_move(pos, move);
 
-		if(score >= beta)
-			return score;
-		if(score > best_value)
-			best_value = score;
-		if(score > alpha)
-			alpha = score;
+		if(type == _SearchType::MAX)
+		{
+			if(score > best_value)
+			{
+				if(score > alpha)
+					alpha = score; // alpha acts like max in MiniMax
+				best_value = alpha;
+			}
+			if(score >= beta)
+				return score; // fail soft beta-cutoff
+		}
+		else
+		{
+			if(score < best_value)
+			{
+				if(score < beta)
+					beta = score; // beta acts like min in MiniMax
+				best_value = score;
+			}
+			if(score <= alpha)
+				return score; // fail soft alpha-cutoffs
+		}
 	}
 	return best_value;
 }
