@@ -110,7 +110,7 @@ void save_position(std::vector<std::string> args)
 		}
 	}
 
-	_saved_pos.print();
+	//_saved_pos.print();
 
 	_gen_moves.clear();
 	_gen_moves = _generate_moves();

@@ -37,3 +37,6 @@ target_link_libraries(chess PRIVATE sfml-window sfml-graphics sfml-system sfml-a
 #Move generation library
 target_link_libraries(chess PRIVATE MoveGeneration)
 target_include_directories(chess PRIVATE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/include")
+
+find_package(Boost COMPONENTS process CONFIG REQUIRED)
+target_link_libraries(chess PRIVATE Boost::process)
