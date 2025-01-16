@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.23.0)
 
-include("$ENV{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake")
-#set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
-#set(CMAKE_TOOLCHAIN_FILE "C:\\Users\\rubco\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,8 +28,8 @@ enable_testing()
 
 add_subdirectory(src/MoveGeneration)
 add_subdirectory(src/MoveEvaluation)
+add_subdirectory(src/Tests)
 add_subdirectory(src/Visualization)
-add_subdirectory(src/UnitTests)
 
 # Basic settings
 set(CPACK_PACKAGE_NAME "ChessEngine")
@@ -54,7 +52,7 @@ set(CPACK_GENERATOR "NSIS")
 # NSIS-specific options
 set(CPACK_NSIS_DISPLAY_NAME "ChessEngine")
 set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/icon.ico")
-#set(CPACK_NSIS_INSTALLER_ICON "${CMAKE_SOURCE_DIR}/installer_icon.ico")
+set(CPACK_NSIS_INSTALLER_ICON "${CMAKE_SOURCE_DIR}/icon.ico")
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 
 # Include CPack at the end

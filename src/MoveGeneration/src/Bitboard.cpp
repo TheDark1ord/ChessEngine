@@ -42,11 +42,11 @@ void bitb::init()
 
 std::vector<bpos> bitb::bitscan(bitboard board)
 {
-    std::vector<bpos> set_bits;
+	std::vector<bpos> set_bits;
     // TODO: Test optimal reserve number or even better update to better algorithm
     set_bits.reserve(8);
 
-    while (board != 0)
+    while (board)
     {
         set_bits.push_back(pop_lsb(board));
         board &= board - 1;
@@ -85,7 +85,7 @@ bpos bitb::pop_lsb(bitboard board)
     }
 #endif
 #else  // Compiler is neither GCC nor MSVC compatible
-#error "Compiler not supported."
+	error "Compiler not supported."
 #endif
 }
 
@@ -94,7 +94,7 @@ unsigned char bitb::bit_count(bitboard board)
     int n = 0;
     while (board)
     {
-        board ^= board & (~board + 1);
+        board &= board - 1;
         ++n;
     }
     return n;

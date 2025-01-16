@@ -1,0 +1,20 @@
+set(MOVE_GENERATION_SOURCE_DIR "${PROJECT_SOURCE_DIR}/lib/")
+set(MOVE_EVALUATION_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src/MoveEvaluation")
+include_directories("${MOVE_GENERATION_SOURCE_DIR}/include")
+include_directories("${MOVE_EVALUATION_SOURCE_DIR}/headers")
+
+add_executable(NodeCount SearchNodes.cpp
+    ${MOVE_EVALUATION_SOURCE_DIR}/src/eval.cpp
+    ${MOVE_EVALUATION_SOURCE_DIR}/src/search.cpp
+)
+target_link_libraries(NodeCount PRIVATE MoveGeneration)
+
+set_target_properties(NodeCount
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/../app/bin/tests"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/../app/bin/tests"
+)
+
+add_test(NAME performance.NodeCount.start_pos COMMAND NodeCount 0)
+#add_test(NAME performance.NodeCount.Kiwipete_pos COMMAND NodeCount 1)
+add_test(NAME performance.NodeCount.pos_3 COMMAND NodeCount 2)

@@ -2,7 +2,8 @@
   "dependencies": [
     "sfml",
     "nanosvg",
-    "wxwidgets"
+    "wxwidgets",
+    "spdlog"
   ],
   "overrides": [
     {

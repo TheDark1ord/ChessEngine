@@ -1,6 +1,5 @@
 #include <SFML/Graphics.hpp>
 
-#include "MagicNumbers.h"
 #include "Bitboard.h"
 #include "MoveGeneration.h"
 
