@@ -42,7 +42,7 @@ void bitb::init()
 
 std::vector<bpos> bitb::bitscan(bitboard board)
 {
-    std::vector<bpos> set_bits;
+	std::vector<bpos> set_bits;
     // TODO: Test optimal reserve number or even better update to better algorithm
     set_bits.reserve(8);
 
@@ -85,7 +85,7 @@ bpos bitb::pop_lsb(bitboard board)
     }
 #endif
 #else  // Compiler is neither GCC nor MSVC compatible
-#error "Compiler not supported."
+	error "Compiler not supported."
 #endif
 }
 

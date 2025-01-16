@@ -118,7 +118,7 @@ void movgen::generate_piece_moves(bpos piece_pos, BoardPosition& pos, movgen::Co
 			{
 				bitboard captures = moves & pos.pieces[BLACK_PIECES + them];
 
-				for(auto move_to : bitb::bitscan(captures))
+				for(auto move_to : bitb::BitscanIterator(captures))
 					generated->push_back(
 						Move(get_piece_from_type(movgen::KING, c), piece_pos, move_to, get_piece(pos, move_to)));
 			}
@@ -126,7 +126,7 @@ void movgen::generate_piece_moves(bpos piece_pos, BoardPosition& pos, movgen::Co
 			{
 				bitboard quiet = moves & ~pos.pieces[BLACK_PIECES + them];
 
-				for(auto move_to : bitb::bitscan(quiet))
+				for(auto move_to : bitb::BitscanIterator(quiet))
 					generated->push_back(Move(get_piece_from_type(movgen::KING, c), piece_pos, move_to));
 			}
 		}
@@ -138,13 +138,13 @@ void movgen::generate_piece_moves(bpos piece_pos, BoardPosition& pos, movgen::Co
 		if(gen_type != movgen::GenType::QUIETS)
 		{
 			bitboard captures = moves & pos.pieces[BLACK_PIECES + them];
-			for(auto move_to : bitb::bitscan(captures))
+			for(auto move_to : bitb::BitscanIterator(captures))
 				generated->push_back(Move(get_piece_from_type(type, c), piece_pos, move_to, get_piece(pos, move_to)));
 		}
 		if(gen_type != movgen::GenType::CAPTURES)
 		{
 			bitboard quiet = moves & ~pos.pieces[BLACK_PIECES + them];
-			for(auto move_to : bitb::bitscan(quiet))
+			for(auto move_to : bitb::BitscanIterator(quiet))
 				generated->push_back(Move(get_piece_from_type(type, c), piece_pos, move_to));
 		}
 	}
@@ -193,11 +193,11 @@ void movgen::generate_pawn_moves(BoardPosition& pos, std::vector<Move>* generate
 			bitboard right_capture_prom = bitb::shift<forward_right>(prom_pawns) & pos.pieces[BLACK_PIECES + them];
 			bitboard push_prom = bitb::shift<forward>(prom_pawns) & ~pos.pieces[ALL_PIECES];
 
-			for(auto move_to : bitb::bitscan(left_capture_prom))
+			for(auto move_to : bitb::BitscanIterator(left_capture_prom))
 				_make_promotions<color, forward_left>(generated, move_to, get_piece(pos, move_to));
-			for(auto move_to : bitb::bitscan(right_capture_prom))
+			for(auto move_to : bitb::BitscanIterator(right_capture_prom))
 				_make_promotions<color, forward_right>(generated, move_to, get_piece(pos, move_to));
-			for(auto move_to : bitb::bitscan(push_prom))
+			for(auto move_to : bitb::BitscanIterator(push_prom))
 				_make_promotions<color, forward>(generated, move_to, 0);
 		}
 	}
@@ -211,7 +211,7 @@ void movgen::generate_pawn_moves(BoardPosition& pos, std::vector<Move>* generate
 										bitb::shift<bitb::RIGHT>(1ull << (pos.hash->en_passant + back))) &
 									   pos.pieces[B_PAWN + us];
 
-			for(auto move_from : bitb::bitscan(candidate_pawns))
+			for(auto move_from : bitb::BitscanIterator(candidate_pawns))
 				generated->push_back(Move(
 					piece, move_from, pos.hash->en_passant, get_piece_from_type(movgen::PAWN, color), 0, false, true, 0));
 		}
@@ -220,9 +220,9 @@ void movgen::generate_pawn_moves(BoardPosition& pos, std::vector<Move>* generate
 		bitboard left_capture = bitb::shift<forward_left>(not_prom_pawns) & pos.pieces[BLACK_PIECES + them];
 		bitboard right_capture = bitb::shift<forward_right>(not_prom_pawns) & pos.pieces[BLACK_PIECES + them];
 
-		for(auto move_to : bitb::bitscan(left_capture))
+		for(auto move_to : bitb::BitscanIterator(left_capture))
 			generated->push_back(Move(piece, move_to - forward - bitb::LEFT, move_to, get_piece(pos, move_to)));
-		for(auto move_to : bitb::bitscan(right_capture))
+		for(auto move_to : bitb::BitscanIterator(right_capture))
 			generated->push_back(Move(piece, move_to - forward - bitb::RIGHT, move_to, get_piece(pos, move_to)));
 	}
 
@@ -232,9 +232,9 @@ void movgen::generate_pawn_moves(BoardPosition& pos, std::vector<Move>* generate
 		bitboard s = bitb::shift<forward>(not_prom_pawns) & ~pos.pieces[ALL_PIECES];
 		bitboard d = bitb::shift<forward>(s & rank3) & ~pos.pieces[ALL_PIECES];
 
-		for(auto move_to : bitb::bitscan(d))
+		for(auto move_to : bitb::BitscanIterator(d))
 			generated->push_back(Move(piece, move_to - forward * 2, move_to, 0, 0, true, false, 0));
-		for(auto move_to : bitb::bitscan(s))
+		for(auto move_to : bitb::BitscanIterator(s))
 			generated->push_back(Move(piece, move_to - forward, move_to));
 	}
 }
@@ -289,14 +289,14 @@ void movgen::get_checkers(BoardPosition& pos, PositionInfo* info)
 	bitboard bishop_checkers = king_sliding & (pos.pieces[B_BISHOP + them] | pos.pieces[B_QUEEN + them]);
 
 	// Prevent the king from going alongside the attacking ray
-	for(auto attacker : bitb::bitscan(bishop_checkers))
+	for(auto attacker : bitb::BitscanIterator(bishop_checkers))
 		piece_attacks |= get_pseudo_attacks<BISHOP>(attacker, pos.pieces[ALL_PIECES] ^ pos.pieces[B_KING + us]);
 
 	king_sliding = get_pseudo_attacks<ROOK>(king_pos, pos.pieces[ALL_PIECES]);
 	bitboard rook_checkers = king_sliding & (pos.pieces[B_ROOK + them] | pos.pieces[B_QUEEN + them]);
 
 	// Prevent the king from going alongside the attacking ray
-	for(auto attacker : bitb::bitscan(rook_checkers))
+	for(auto attacker : bitb::BitscanIterator(rook_checkers))
 		piece_attacks |= get_pseudo_attacks<ROOK>(attacker, pos.pieces[ALL_PIECES] ^ pos.pieces[B_KING + us]);
 
 	// Check for knights
@@ -351,7 +351,7 @@ void movgen::get_pinners(BoardPosition& pos, PositionInfo* info)
 
 	king_sliding = get_pseudo_attacks<BISHOP>(king_pos, pos.pieces[ALL_PIECES] ^ candidates);
 	bitboard pinners = king_sliding & pos.pieces[BLACK_PIECES + them];
-	for(bpos pin : bitb::bitscan(pinners))
+	for(bpos pin : bitb::BitscanIterator(pinners))
 	{
 		if(get_piece(pos, pin) == (B_BISHOP + them) || get_piece(pos, pin) == (B_QUEEN + them))
 		{
@@ -372,7 +372,7 @@ void movgen::get_pinners(BoardPosition& pos, PositionInfo* info)
 
 	king_sliding = get_pseudo_attacks<ROOK>(king_pos, pos.pieces[ALL_PIECES] ^ candidates);
 	pinners = king_sliding & pos.pieces[BLACK_PIECES + them];
-	for(bpos pin : bitb::bitscan(pinners))
+	for(bpos pin : bitb::BitscanIterator(pinners))
 	{
 		if(get_piece(pos, pin) == (B_ROOK + them) || get_piece(pos, pin) == (B_QUEEN + them))
 		{
@@ -439,7 +439,7 @@ void movgen::get_attacked(BoardPosition& pos, PositionInfo* info)
 	bitboard& king_attacks = color == movgen::WHITE ? info->w_king_attacks : info->b_king_attacks;
 
 #define get_attacks(attacks, piece)                                                                                         \
-	for(bpos p_pos : bitb::bitscan(pos.pieces[piece + us]))                                                                 \
+	for(bpos p_pos : bitb::BitscanIterator(pos.pieces[piece + us]))                                                                 \
 		attacks |= get_pseudo_attacks<piece>(p_pos, pos.pieces[ALL_PIECES]);
 
 	get_attacks(king_attacks, KING);
@@ -464,22 +464,22 @@ void movgen::generate_all_moves(BoardPosition& pos, std::vector<movgen::Move>* m
 	case movgen::GenType::QUIETS:
 	case movgen::GenType::CAPTURES: // Follow LVA(Least Valuble aggressor heuristic)
 		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
-		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KING, color)]))
+		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::KING, color)]))
 			generate_piece_moves<movgen::KING, gen_type>(piece_pos, pos, color, moves);
-		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::BISHOP, color)]))
+		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::BISHOP, color)]))
 			generate_piece_moves<movgen::BISHOP, gen_type>(piece_pos, pos, color, moves);
-		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KNIGHT, color)]))
+		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::KNIGHT, color)]))
 			generate_piece_moves<movgen::KNIGHT, gen_type>(piece_pos, pos, color, moves);
-		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::QUEEN, color)]))
+		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::QUEEN, color)]))
 			generate_piece_moves<movgen::QUEEN, gen_type>(piece_pos, pos, color, moves);
-		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::ROOK, color)]))
+		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::ROOK, color)]))
 			generate_piece_moves<movgen::ROOK, gen_type>(piece_pos, pos, color, moves);
 		break;
 	case movgen::GenType::PROMOTIONS:
 		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
 		break;
 	case movgen::GenType::CASTLING:
-		for(auto piece_pos : bitb::bitscan(pos.pieces[get_piece_from_type(movgen::KING, color)]))
+		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::KING, color)]))
 			generate_piece_moves<movgen::KING, gen_type>(piece_pos, pos, color, moves);
 		break;
 	}
@@ -523,7 +523,7 @@ std::vector<movgen::Move> movgen::get_legal_moves(BoardPosition& pos, std::vecto
 	// Only king moves are possible
 	if(pos.info->checks_num >= 2)
 	{
-		for(Move move : generated)
+		for(Move& move : generated)
 			if(move.from == ksq && move.get_type() != CASTLING)
 				if(!(attacked & bitb::sq_bitb(move.to)))
 					legal_moves.push_back(move);
@@ -532,7 +532,7 @@ std::vector<movgen::Move> movgen::get_legal_moves(BoardPosition& pos, std::vecto
 	// Only allow king moves and blockers
 	if(pos.info->checks_num == 1)
 	{
-		for(Move move : generated)
+		for(Move& move : generated)
 		{
 			if(bitb::sq_bitb(move.from) & pos.info->pin_board)
 				continue;
@@ -545,9 +545,8 @@ std::vector<movgen::Move> movgen::get_legal_moves(BoardPosition& pos, std::vecto
 		return legal_moves;
 	}
 
-	for(size_t i = 0; i < generated.size(); ++i)
+	for(Move& move : generated)
 	{
-		Move move = generated[i];
 		// Check for legality only if one these 4 requirements are met
 		if(!(bitb::sq_bitb(move.from) & pinned || move.from == ksq || move.get_type() == EN_PASSANT) || _is_legal(pos, move))
 			legal_moves.push_back(move);
@@ -847,9 +846,9 @@ void bitb_movearray(movgen::Piece piece,
 	bitboard captures = move_board & them;
 	bitboard quiet = move_board ^ captures;
 
-	for(auto pos_to : bitb::bitscan(quiet))
+	for(auto pos_to : bitb::BitscanIterator(quiet))
 		move_arr->push_back(movgen::Move(piece, starting_pos, pos_to));
-	for(auto pos_to : bitb::bitscan(captures))
+	for(auto pos_to : bitb::BitscanIterator(captures))
 		move_arr->push_back(movgen::Move(piece, starting_pos, pos_to, movgen::get_piece(pos, pos_to)));
 }
 

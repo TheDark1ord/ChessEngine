@@ -2,6 +2,7 @@
 #define BITBOARD_H
 
 #include <atomic>
+#include <iterator>
 #include <vector>
 
 /*
@@ -92,6 +93,39 @@ constexpr bitboard sq_bitb(bpos pos)
 std::vector<bpos> bitscan(bitboard board);
 bpos pop_lsb(bitboard board);
 unsigned char bit_count(bitboard board);
+
+// Lazy implementation of the bitscan method
+class BitscanIterator
+{
+	bitboard board;
+public:
+	explicit BitscanIterator(bitboard initial) : board(initial) {}
+
+	class Iterator
+	{
+		bitboard board;
+	public:
+		using iterator_category = std::input_iterator_tag;
+        using value_type = bpos;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const bpos*;
+        using reference = const bpos&;
+
+		explicit Iterator(bitboard b) : board(b) {}
+
+		bpos operator*() const { return pop_lsb(board); }
+		bool operator!=(const Iterator& other) const {
+			return board != other.board;
+		}
+		Iterator& operator++() {
+			board &= board - 1;
+			return *this;
+		}
+	};
+
+	Iterator begin() const { return Iterator(board); };
+	Iterator end() const { return Iterator(0); };
+};
 
 // Common line(from edge to edge) between two squares (if exists)
 extern bitboard Line[64][64];
