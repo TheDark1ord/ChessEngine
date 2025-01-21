@@ -91,7 +91,7 @@ void Board::draw_check(sf::RenderWindow* window, uint16_t check_square)
         });
 
     sf::VertexArray circle(sf::TriangleStrip, 50);
-    
+
     for (size_t i = 0; i < circle.getVertexCount(); i += 2)
     {
         float angle = 2 * 3.14 * (i / float(circle.getVertexCount() - 2));
@@ -322,12 +322,15 @@ void Board::place_squares()
 
 void Board::update_squares(uint16_t reset_pos, uint16_t set_pos, sf::Color set_col)
 {
-    reset_pos = reset_pos == NO_SQUARE ? reset_pos : 63 - reset_pos;
-    set_pos = set_pos == NO_SQUARE ? set_pos : 63 - set_pos;
+	if (!flipped)
+	{
+		reset_pos = reset_pos == NO_SQUARE ? reset_pos : 63 - reset_pos;
+		set_pos = set_pos == NO_SQUARE ? set_pos : 63 - set_pos;
+	}
 
     const sf::Color reset_col = choose_color(reset_pos, board_green, board_pale);
 
-    if (reset_pos != UINT16_MAX)
+    if (reset_pos != NO_SQUARE)
     {
         this->square_vertex[reset_pos * 4 + 0].color = reset_col;
         this->square_vertex[reset_pos * 4 + 1].color = reset_col;
@@ -335,7 +338,7 @@ void Board::update_squares(uint16_t reset_pos, uint16_t set_pos, sf::Color set_c
         this->square_vertex[reset_pos * 4 + 3].color = reset_col;
     }
 
-    if (set_pos != UINT16_MAX)
+    if (set_pos != NO_SQUARE)
     {
         this->square_vertex[set_pos * 4 + 0].color = set_col;
         this->square_vertex[set_pos * 4 + 1].color = set_col;

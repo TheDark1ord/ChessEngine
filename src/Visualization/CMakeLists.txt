@@ -2,7 +2,6 @@ add_executable(chess
 	WIN32
 	main.cpp
 	src/draw_board.cpp
-	src/event_handler.cpp
 	src/game.cpp
 	${WIN32_RESOURCES}
 )

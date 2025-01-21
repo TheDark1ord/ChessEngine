@@ -16,8 +16,8 @@
 #define prev_move_light sf::Color(225, 234, 162)
 #define prev_move_dark sf::Color(165, 190, 101)
 
-#define selected_light sf::Color(157, 244, 233)
-#define selected_dark sf::Color(97, 200, 171)
+#define selected_light sf::Color(225, 234, 162)
+#define selected_dark sf::Color(165, 190, 101)
 
 #define NO_SQUARE UINT16_MAX
 

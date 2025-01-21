@@ -211,7 +211,8 @@ float __minmax(movgen::BoardPosition* pos, std::vector<movgen::Move>& gen_moves,
 template <_SearchType type>
 float _minmax_captures(movgen::BoardPosition* pos, float alpha, float beta)
 {
-	float score, best_value;
+	float score;
+	float best_value = (type == _SearchType::MAX ? -INFINITY : INFINITY);
 
 	if(type == _SearchType::MAX)
 		score = eval(*pos);

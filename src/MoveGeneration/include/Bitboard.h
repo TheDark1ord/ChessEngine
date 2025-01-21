@@ -53,43 +53,6 @@ constexpr bitboard flip_horizontal(bitboard b)
 	return b;
 }
 
-    // Converts a square position to bitboard with 1 in that position
-    constexpr bitboard sq_bitb(bpos pos) { return 1ull << pos; }
-
-    /// @brief converts a bitboard into a sequense of values between 0 and 63, that
-    /// correspond to positions of set bits in the bitboard
-    std::vector<bpos> bitscan(bitboard board);
-    bpos pop_lsb(bitboard board);
-    unsigned char bit_count(bitboard board);
-
-    // Common line(from edge to edge) between two squares (if exists)
-    extern bitboard Line[64][64];
-
-    // A line connecting two squares(includes these squares) (if exists)
-    extern bitboard Between[64][64];
-
-    // Same as Between, but not including edge squares
-    extern bitboard Between_in[64][64];
-
-    // Get a rank or a file of a given square
-    constexpr bitboard sq_rank(bpos sq) { return Rank[sq >> 3]; }
-    constexpr bitboard sq_file(bpos sq) { return File[7 - sq & 0b111]; }
-
-    template <bitb::Direction D>
-    constexpr bitboard shift(bitboard bitb)
-    {
-        return D == bitb::UP                   ? bitb << 8
-               : D == bitb::UP + bitb::UP      ? bitb << 16
-               : D == bitb::UP + bitb::LEFT    ? (bitb & ~File[0]) << 9
-               : D == bitb::UP + bitb::RIGHT   ? (bitb & ~File[7]) << 7
-               : D == bitb::DOWN               ? bitb >> 8
-               : D == bitb::DOWN + bitb::DOWN  ? bitb >> 16
-               : D == bitb::DOWN + bitb::LEFT  ? (bitb & ~File[0]) >> 7
-               : D == bitb::DOWN + bitb::RIGHT ? (bitb & ~File[7]) >> 9
-               : D == bitb::LEFT               ? (bitb & ~File[0]) << 1
-               : D == bitb::RIGHT              ? (bitb & ~File[7]) >> 1
-                                               : 0;
-    };
 enum Direction
 {
 	LEFT = 1,
@@ -120,10 +83,7 @@ constexpr bitboard Rank[8]{
 };
 
 // Converts a square position to bitboard with 1 in that position
-constexpr bitboard sq_bitb(bpos pos)
-{
-	return 1ull << pos;
-}
+inline const bitboard sq_bitb(bpos pos) { return 1ull << pos; }
 
 /// @brief converts a bitboard into a sequense of values between 0 and 63, that
 /// correspond to positions of set bits in the bitboard
