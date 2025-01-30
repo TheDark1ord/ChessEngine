@@ -97,15 +97,17 @@ void Chess::handle_engine_move()
 	//Construct move from string
 	bpos from, to;
 	unsigned char capture = 0, promotion = 0;
-	from = (engine_move[1] - '1') * 8 + engine_move[0] - 'a';
+	from = (engine_move[1] - '1') * 8 + (7 - (engine_move[0] - 'a'));
 
 	if (engine_move[2] == 'x')
 	{
-		to = (engine_move[4] - '1') * 8 + engine_move[3] - 'a';
+		to = (engine_move[4] - '1') * 8 + (7 - (engine_move[3] - 'a'));
 		capture = movgen::get_piece(position, to);
 	}
 	else
-		to = (engine_move[3] - '1') * 8 + engine_move[2] - 'a';
+		to = (engine_move[3] - '1') * 8 + (7 - (engine_move[2] - 'a'));
+
+	auto piece = movgen::get_piece(position, from);
 
 	//Last character is promotion specifier
 	if(!std::isdigit(engine_move.back()))
@@ -118,8 +120,17 @@ void Chess::handle_engine_move()
 			)
 		);
 
+	unsigned char castling = 0;
+	if (movgen::get_piece_type(piece) == movgen::KING)
+	{
+		if(to - from == 2)
+			castling = 1; // Short castle
+		else if(from - to == 3)
+			castling = 2; // Long castle
+	}
+
 	movgen::Move final_move(
-			movgen::get_piece(position, from),
+			piece,
 			from,
 			to,
 			capture,
@@ -299,10 +310,10 @@ EngineChildProcess::EngineChildProcess()
 	: engine_ready(false)
 {
 	engine_process = bp::child(
-		bp::search_path(engine_exe_path),
+		engine_exe_path,
 		bp::std_in < engine_in,
 		bp::std_out > engine_out,
-		::boost::process::windows::create_no_window);
+		::boost::process::windows::show);
 	engine_process.detach();
 
 	auto check_ready = [this]() {
@@ -338,7 +349,7 @@ std::string EngineChildProcess::engine_search(std::string fen)
 
 	std::string engine_output;
 	engine_in << "position fen " << fen << std::endl;
-	engine_in << "search depth 4" << std::endl;
+	engine_in << "search depth 6" << std::endl;
 
 	std::getline(engine_out, engine_output);
 	engine_output = engine_output.substr(0, engine_output.find(':'));
