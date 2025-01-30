@@ -37,7 +37,7 @@ constexpr bool read_bit(bitboard& b, bpos pos)
 	return b & (1ull << pos);
 }
 
-constexpr bitboard flip_vertical(bitboard b)
+inline bitboard flip_vertical(bitboard b)
 {
 	return _byteswap_uint64(b);
 }
@@ -83,10 +83,7 @@ constexpr bitboard Rank[8]{
 };
 
 // Converts a square position to bitboard with 1 in that position
-constexpr bitboard sq_bitb(bpos pos)
-{
-	return 1ull << pos;
-}
+inline const bitboard sq_bitb(bpos pos) { return 1ull << pos; }
 
 /// @brief converts a bitboard into a sequense of values between 0 and 63, that
 /// correspond to positions of set bits in the bitboard

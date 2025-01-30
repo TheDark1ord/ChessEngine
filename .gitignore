@@ -5,9 +5,13 @@ lib/
 
 .*
 !.clang-format
+resources.res
 
 tags
 
 out/
 
 vcpkg_installed/
+CMakePresets.json
+
+/CMakeLists.txt
