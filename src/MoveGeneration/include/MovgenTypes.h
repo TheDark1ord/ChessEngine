@@ -174,8 +174,9 @@ inline const char* fen_regex_string = "\\s*^(((?:[rnbqkpRNBQKP1-8]+\\/){7})[rnbq
 BoardPosition board_from_fen(std::string fen);
 std::string board_to_fen(BoardPosition& pos);
 
-struct Move
+class Move
 {
+public:
 	Piece piece;
 	bpos from;
 	bpos to;
@@ -203,6 +204,7 @@ struct Move
 	// Note: there is no validity check
 	uint16_t move_data;
 
+	Move();
 	Move(Piece piece, bpos from, bpos to);
 	Move(Piece piece,
 		 bpos from,
@@ -212,6 +214,7 @@ struct Move
 		 bool double_move = 0,
 		 bool en_passant = 0,
 		 unsigned char castling = 0);
+	Move(const Move& other);
 
 	MoveType get_type() const;
 	Piece get_captured() const;
@@ -227,7 +230,7 @@ struct Move
 	static constexpr char const piece_str[]{
 		0, 'k', 'q', 'r', 'b', 'n', 'p'
 	};
-	operator std::string();
+	operator std::string() const;
 
 	bool is_null_instance = false;
 	static Move return_null();

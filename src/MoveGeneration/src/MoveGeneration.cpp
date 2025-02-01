@@ -439,7 +439,7 @@ void movgen::get_attacked(BoardPosition& pos, PositionInfo* info)
 	bitboard& king_attacks = color == movgen::WHITE ? info->w_king_attacks : info->b_king_attacks;
 
 #define get_attacks(attacks, piece)                                                                                         \
-	for(bpos p_pos : bitb::BitscanIterator(pos.pieces[piece + us]))                                                                 \
+	for(bpos p_pos : bitb::BitscanIterator(pos.pieces[piece + us]))                                                         \
 		attacks |= get_pseudo_attacks<piece>(p_pos, pos.pieces[ALL_PIECES]);
 
 	get_attacks(king_attacks, KING);
@@ -462,18 +462,18 @@ void movgen::generate_all_moves(BoardPosition& pos, std::vector<movgen::Move>* m
 	{
 	case movgen::GenType::ALL_MOVES:
 	case movgen::GenType::QUIETS:
-	case movgen::GenType::CAPTURES: // Follow LVA(Least Valuble aggressor heuristic)
-		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
+	case movgen::GenType::CAPTURES:
 		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::KING, color)]))
 			generate_piece_moves<movgen::KING, gen_type>(piece_pos, pos, color, moves);
-		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::BISHOP, color)]))
-			generate_piece_moves<movgen::BISHOP, gen_type>(piece_pos, pos, color, moves);
 		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::KNIGHT, color)]))
 			generate_piece_moves<movgen::KNIGHT, gen_type>(piece_pos, pos, color, moves);
-		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::QUEEN, color)]))
-			generate_piece_moves<movgen::QUEEN, gen_type>(piece_pos, pos, color, moves);
+		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::BISHOP, color)]))
+			generate_piece_moves<movgen::BISHOP, gen_type>(piece_pos, pos, color, moves);
 		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::ROOK, color)]))
 			generate_piece_moves<movgen::ROOK, gen_type>(piece_pos, pos, color, moves);
+		for(auto piece_pos : bitb::BitscanIterator(pos.pieces[get_piece_from_type(movgen::QUEEN, color)]))
+			generate_piece_moves<movgen::QUEEN, gen_type>(piece_pos, pos, color, moves);
+		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
 		break;
 	case movgen::GenType::PROMOTIONS:
 		movgen::generate_pawn_moves<color, gen_type>(pos, moves);
