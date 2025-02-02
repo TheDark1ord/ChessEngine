@@ -56,7 +56,10 @@ int main() {
         static std::string line;
 
         //printf(">");
-        std::getline(std::cin, line);
+		if (!std::getline(std::cin, line)) {
+			// EOF or error occurred, exit the loop
+			break;
+		}
         std::vector<std::string> split_line = split_string(line, " ");
 
         // Firs argument is command name, the rest are cmd arguments for a function

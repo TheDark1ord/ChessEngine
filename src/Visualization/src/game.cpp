@@ -313,7 +313,7 @@ EngineChildProcess::EngineChildProcess()
 		engine_exe_path,
 		bp::std_in < engine_in,
 		bp::std_out > engine_out,
-		::boost::process::windows::show);
+		::boost::process::windows::create_no_window);
 	engine_process.detach();
 
 	auto check_ready = [this]() {
