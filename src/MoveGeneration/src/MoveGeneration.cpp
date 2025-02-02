@@ -570,7 +570,7 @@ void movgen::make_move(movgen::BoardPosition* pos, movgen::Move& move, std::vect
 	pos->hash = new BoardHash(pos->hash);
 	pos->hash->key ^= zobrist::side;
 
-	// Flip the color&
+	// Flip the color
 	pos->side_to_move = static_cast<movgen::Color>(!pos->side_to_move);
 	if(pos->side_to_move == movgen::WHITE)
 		pos->fullmove++;
@@ -672,12 +672,12 @@ void movgen::make_move(movgen::BoardPosition* pos, movgen::Move& move, std::vect
 		if(movgen::get_piece_type(move.piece) == movgen::KING)
 		{
 			pos->hash->ply = 0;
-			pos->hash->key ^= zobrist::castling[castling];
-			pos->hash->castling_rights ^= castling;
+			pos->hash->castling_rights &= ~castling;
+			pos->hash->key ^= zobrist::castling[pos->hash->castling_rights & castling];
 		}
 		else if(movgen::get_piece_type(move.piece) == movgen::ROOK)
 		{
-			movgen::CastlingRights castling_change = movgen::NO_CASTLING;
+			movgen::CastlingRights castling_change;
 			// h rank rook
 			if(bitb::sq_bitb(move.from) & bitb::File[7])
 				castling_change = static_cast<movgen::CastlingRights>(castling & movgen::SHORT);

@@ -273,6 +273,7 @@ template <movgen::Color col>
 float __minmax(movgen::BoardPosition* pos, std::vector<movgen::Move>* gen_moves,
 		uint16_t depth, float alpha, float beta _LOG_NODE_ARG_DEF)
 {
+	assert(col == pos->side_to_move);
 	// Opposite color
 	constexpr movgen::Color op_col = (col == movgen::WHITE) ? movgen::BLACK : movgen::WHITE;
 
@@ -346,6 +347,7 @@ float __minmax(movgen::BoardPosition* pos, std::vector<movgen::Move>* gen_moves,
 template <movgen::Color col>
 float _minmax_captures(movgen::BoardPosition* pos, float alpha, float beta _LOG_NODE_ARG_DEF)
 {
+	assert(col == pos->side_to_move);
 	// Opposite color
 	constexpr movgen::Color op_col = (col == movgen::WHITE) ? movgen::BLACK : movgen::WHITE;
 
