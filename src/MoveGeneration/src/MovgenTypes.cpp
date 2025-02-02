@@ -267,13 +267,13 @@ std::string movgen::board_to_fen(movgen::BoardPosition& pos)
 	fen += pos.side_to_move == movgen::WHITE ? 'w' : 'b';
 	fen += ' ';
 
-	if(pos.hash->castling_rights | movgen::WHITE_SHORT)
+	if(pos.hash->castling_rights & movgen::WHITE_SHORT)
 		fen += 'K';
-	if(pos.hash->castling_rights | movgen::WHITE_LONG)
+	if(pos.hash->castling_rights & movgen::WHITE_LONG)
 		fen += 'Q';
-	if(pos.hash->castling_rights | movgen::BLACK_SHORT)
+	if(pos.hash->castling_rights & movgen::BLACK_SHORT)
 		fen += 'k';
-	if(pos.hash->castling_rights | movgen::BLACK_LONG)
+	if(pos.hash->castling_rights & movgen::BLACK_LONG)
 		fen += 'q';
 
 	if(pos.hash->castling_rights == movgen::NO_CASTLING)
@@ -310,6 +310,19 @@ movgen::Color movgen::get_piece_color(movgen::Piece piece)
 	assert(piece <= 14);
 	return static_cast<movgen::Color>(piece >> 3);
 }
+
+movgen::Move::Move()
+	:Move(movgen::Piece::NO_PIECE, 0, 0)
+{
+	this->is_null_instance = true;
+}
+
+movgen::Move::Move(const Move& other)
+	:piece(other.piece)
+	 , from(other.from)
+	 , to(other.to)
+	 , move_data(other.move_data)
+{}
 
 movgen::Move::Move(Piece piece, bpos from, bpos to)
 	: piece(piece)
@@ -383,12 +396,12 @@ movgen::Move movgen::Move::return_null()
 	return instance;
 }
 
-movgen::Move::operator std::string()
+movgen::Move::operator std::string() const
 {
 	std::string move_str = squares[from];
 
 	if (this->get_captured() != 0)
-		move_str += piece_str[movgen::get_piece_type(this->get_captured())];
+		move_str += "x";
 
 	move_str += squares[to];
 
