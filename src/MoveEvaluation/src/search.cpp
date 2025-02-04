@@ -376,6 +376,7 @@ float _minmax_captures(movgen::BoardPosition* pos, float alpha, float beta _LOG_
 	movgen::generate_all_moves<col, movgen::GenType::CAPTURES>(*pos, &pseudo_legal);
 	new_moves = movgen::get_legal_moves(*pos, pseudo_legal);
 
+	sort_moves(&new_moves);
 	for(auto& move : new_moves)
 	{
 #if LOG_SEARCH
