@@ -677,7 +677,7 @@ void movgen::make_move(movgen::BoardPosition* pos, movgen::Move& move, std::vect
 		}
 		else if(movgen::get_piece_type(move.piece) == movgen::ROOK)
 		{
-			movgen::CastlingRights castling_change;
+			movgen::CastlingRights castling_change = movgen::NO_CASTLING;
 			// h rank rook
 			if(bitb::sq_bitb(move.from) & bitb::File[7])
 				castling_change = static_cast<movgen::CastlingRights>(castling & movgen::SHORT);
@@ -686,7 +686,7 @@ void movgen::make_move(movgen::BoardPosition* pos, movgen::Move& move, std::vect
 				castling_change = static_cast<movgen::CastlingRights>(castling & movgen::LONG);
 
 			pos->hash->ply = 0;
-			pos->hash->key ^= zobrist::castling[castling_change];
+			pos->hash->key ^= zobrist::castling[pos->hash->castling_rights &  castling_change];
 			pos->hash->castling_rights &= ~castling_change;
 		}
 	}

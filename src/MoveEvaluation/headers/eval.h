@@ -4,27 +4,106 @@
 #include "MovgenTypes.h"
 #include <cmath>
 
-static constexpr float piece_val(movgen::PieceType piece) {
-  switch (piece) {
-  case movgen::KING:
-    return 0;
-  case movgen::QUEEN:
-    return 8.0;
-  case movgen::ROOK:
-    return 5.0;
-  case movgen::BISHOP:
-    return 3.2;
-  case movgen::KNIGHT:
-    return 3.0;
-  case movgen::PAWN:
-    return 1.0;
-  default:
-    return INFINITY;
-  }
+static constexpr float piece_val(movgen::PieceType piece)
+{
+	switch (piece)
+	{
+		case movgen::KING:
+			return 0;
+		case movgen::QUEEN:
+			return 8.0;
+		case movgen::ROOK:
+			return 5.0;
+		case movgen::BISHOP:
+			return 3.2;
+		case movgen::KNIGHT:
+			return 3.0;
+		case movgen::PAWN:
+			return 1.0;
+		default:
+			return INFINITY;
+	}
 }
 
-static float _eval_white(movgen::BoardPosition& pos);
-static float _eval_black(movgen::BoardPosition& pos);
+
+static const float piece_square_tables[][64]
+{
+	{ // King in the early to mid game
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-20,-30,-30,-40,-40,-30,-30,-20,
+		-10,-20,-20,-20,-20,-20,-20,-10,
+		20, 20,  0,  0,  0,  0, 20, 20,
+		20, 40, 10,  0,  0, 10, 40, 20
+	},
+	{ // Queen
+		-20,-10,-10, -5, -5,-10,-10,-20,
+		-10,  0,  0,  0,  0,  0,  0,-10,
+		-10,  0,  5,  5,  5,  5,  0,-10,
+		-5,  0,  5,  5,  5,  5,  0, -5,
+		0,  0,  5,  5,  5,  5,  0, -5,
+		-10,  5,  5,  5,  5,  5,  0,-10,
+		-10,  0,  5,  0,  0,  0,  0,-10,
+		-20,-10,-10, -5, -5,-10,-10,-20
+	},
+	{ // Rook
+		0,  0,  0,  0,  0,  0,  0,  0,
+		5, 10, 10, 10, 10, 10, 10,  5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		0,  0,  0,  5,  5,  0,  0,  0
+	},
+	{ // Bishop
+		-20,-10,-10,-10,-10,-10,-10,-20,
+		-10,  0,  0,  0,  0,  0,  0,-10,
+		-10,  0,  5, 10, 10,  5,  0,-10,
+		-10,  5,  5, 10, 10,  5,  5,-10,
+		-10,  0, 10, 10, 10, 10,  0,-10,
+		-10, 10, 10, 10, 10, 10, 10,-10,
+		-10,  5,  0,  0,  0,  0,  5,-10,
+		-20,-10,-10,-10,-10,-10,-10,-20,
+	},
+	{ // Knight
+		-50,-40,-30,-30,-30,-30,-40,-50,
+		-40,-20,  0,  0,  0,  0,-20,-40,
+		-30,  0, 10, 15, 15, 10,  0,-30,
+		-30,  5, 15, 20, 20, 15,  5,-30,
+		-30,  0, 15, 20, 20, 15,  0,-30,
+		-30,  5, 10, 15, 15, 10,  5,-30,
+		-40,-20,  0,  5,  5,  0,-20,-40,
+		-50,-10,-30,-30,-30,-30,-10,-50,
+	},
+	{ // Pawns
+		0,  0,  0,  0,  0,  0,  0,  0,
+		50, 50, 50, 50, 50, 50, 50, 50,
+		10, 10, 20, 30, 30, 20, 10, 10,
+		5,  5, 10, 20, 20, 10,  5,  5,
+		0,  0,  0, 25, 25,  0,  0,  0,
+		5, -5,-10,  0,  0,-10, -5,  5,
+		5, 10, 10,-20,-20, 10, 10,  5,
+		0,  0,  0,  0,  0,  0,  0,  0
+	}
+};
+
+static const float king_square_table_endgame[]
+{
+	-50,-40,-30,-20,-20,-30,-40,-50,
+	-30,-20,-10,  0,  0,-10,-20,-30,
+	-30,-10, 20, 30, 30, 20,-10,-30,
+	-30,-10, 30, 40, 40, 30,-10,-30,
+	-30,-10, 30, 40, 40, 30,-10,-30,
+	-30,-10, 20, 30, 30, 20,-10,-30,
+	-30,-30,  0,  0,  0,  0,-30,-30,
+	-50,-30,-30,-30,-30,-30,-30,-50
+};
+
+template <movgen::Color col>
+float _eval_side(const movgen::BoardPosition& pos);
 
 // Range: -40 -- +40
 // (-)n*e+3 -- mate in n moves
