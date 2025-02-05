@@ -21,7 +21,7 @@ foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
     set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} )
 endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
-project(chess-engine VERSION 0.1 LANGUAGES CXX)
+project(chess-engine VERSION 0.5 LANGUAGES CXX)
 
 include(CTest)
 enable_testing()
@@ -33,7 +33,7 @@ add_subdirectory(src/Visualization)
 
 # Basic settings
 set(CPACK_PACKAGE_NAME "ChessEngine")
-set(CPACK_PACKAGE_VERSION "0.0.5")
+set(CPACK_PACKAGE_VERSION "0.5")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Chess engine Installer")
 set(CPACK_PACKAGE_VENDOR "Andlepiha")
 set(CPACK_PACKAGE_CONTACT "rubcov23033@gmail.com")
@@ -43,17 +43,39 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY "ChessEngine ${CPACK_PACKAGE_VERSION}")
 set(CPACK_INSTALL_PREFIX "C:/Program Files/${CPACK_PACKAGE_NAME}")
 
 # Optional license and readme files
-#set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
-#set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
 
 # Set generator (NSIS in this case)
 set(CPACK_GENERATOR "NSIS")
 
 # NSIS-specific options
 set(CPACK_NSIS_DISPLAY_NAME "ChessEngine")
-set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/icon.ico")
-set(CPACK_NSIS_INSTALLER_ICON "${CMAKE_SOURCE_DIR}/icon.ico")
+set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/favicon.ico")
+set(CPACK_NSIS_INSTALLER_ICON "${CMAKE_SOURCE_DIR}/favicon.ico")
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+set(CPACK_NSIS_CREATE_ICONS_EXTRA "
+  SetOutPath '$INSTDIR\\\\bin'
+  CreateShortCut '$DESKTOP\\\\ChessEngine.lnk' '$INSTDIR\\\\bin\\\\chess.exe' '' '$INSTDIR\\\\Data\\\\icon.ico' 0
+  CreateShortCut '$SMPROGRAMS\\\\ChessEngine\\\\ChessEngine.lnk' '$INSTDIR\\\\bin\\\\chess.exe' ' '$INSTDIR\\\\Data\\\\icon.ico' 0
+")
+set(CPACK_NSIS_DELETE_ICONS_EXTRA "
+  Delete '$DESKTOP\\\\ChessEngine.lnk' 
+  Delete '$SMPROGRAMS\\\\ChessEngine\\\\ChessEngine.lnk'
+  RMDir '$SMPROGRAMS\\\\ChessEngine'
+")
+
+install(TARGETS chess DESTINATION bin)
+install(TARGETS engine DESTINATION bin)
+#Install all required dlls
+install(DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
+	DESTINATION bin
+	FILES_MATCHING
+		PATTERN "*.dll"
+		PATTERN "tests" EXCLUDE
+		PATTERN "logs" EXCLUDE
+)
+install(DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../Data/" DESTINATION Data)
 
 # Include CPack at the end
 include(CPack)

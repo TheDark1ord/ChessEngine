@@ -9,10 +9,10 @@ add_library(MoveGeneration STATIC
 set_target_properties(MoveGeneration PROPERTIES PUBLIC_HEADER
     "./include/MagicNumbers.h;./include/MoveGeneration.h;./include/Types.h")
 
-install(TARGETS MoveGeneration
-    LIBRARY DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
-    PUBLIC_HEADER DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/include"
-)
+#install(TARGETS MoveGeneration
+#LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/lib"
+#    PUBLIC_HEADER DESTINATION "${PROJECT_SOURCE_DIR}/lib/include"
+#)
 
 file(GLOB LIB_HEADERS include/*.h)
 foreach (HeaderFile IN LISTS LIB_HEADERS)

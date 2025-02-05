@@ -2,6 +2,7 @@
 #include <thread>
 #include <format>
 #include <filesystem>
+#include "spdlog/spdlog.h"
 
 #include "MoveGeneration.h"
 #include "MagicNumbers.h"
@@ -100,43 +101,20 @@ void Chess::handle_engine_move()
 	from = (engine_move[1] - '1') * 8 + (7 - (engine_move[0] - 'a'));
 
 	if (engine_move[2] == 'x')
-	{
 		to = (engine_move[4] - '1') * 8 + (7 - (engine_move[3] - 'a'));
-		capture = movgen::get_piece(position, to);
-	}
 	else
 		to = (engine_move[3] - '1') * 8 + (7 - (engine_move[2] - 'a'));
 
 	auto piece = movgen::get_piece(position, from);
 
-	//Last character is promotion specifier
-	if(!std::isdigit(engine_move.back()))
-		promotion = std::distance(
-				std::begin(movgen::Move::piece_str),
-				std::find(
-					std::begin(movgen::Move::piece_str),
-					std::end(movgen::Move::piece_str),
-					engine_move.back()
-			)
-		);
-
-	unsigned char castling = 0;
-	if (movgen::get_piece_type(piece) == movgen::KING)
+	for(auto& move : *cur_moves)
 	{
-		if(to - from == 2)
-			castling = 1; // Short castle
-		else if(from - to == 3)
-			castling = 2; // Long castle
+		if(move.from == from && move.to == to)
+		{
+			move_piece(move);
+		}
 	}
 
-	movgen::Move final_move(
-			piece,
-			from,
-			to,
-			capture,
-			promotion
-	);
-	move_piece(final_move);
 }
 
 void Chess::handle_event(sf::Event ev)
@@ -349,9 +327,13 @@ std::string EngineChildProcess::engine_search(std::string fen)
 
 	std::string engine_output;
 	engine_in << "position fen " << fen << std::endl;
-	engine_in << "search depth 6" << std::endl;
+	engine_in << "search depth 7" << std::endl;
+
+	spdlog::info("Searching position " + fen);
 
 	std::getline(engine_out, engine_output);
+	spdlog::info("Engine output: " + engine_output);
+
 	engine_output = engine_output.substr(0, engine_output.find(':'));
 
 	return engine_output;

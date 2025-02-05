@@ -2,6 +2,8 @@
 
 #include "Bitboard.h"
 #include "MoveGeneration.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 #include "headers/game.h"
 #include <iostream>
@@ -18,6 +20,11 @@ int main()
 
     init_thread1.detach();
     init_thread2.detach();
+
+#ifndef NDEBUG
+	auto new_logger = spdlog::basic_logger_mt("new_default_logger", "logs/runtime-engine-log.txt", true);
+	spdlog::set_default_logger(new_logger);
+#endif
 
     try
     {

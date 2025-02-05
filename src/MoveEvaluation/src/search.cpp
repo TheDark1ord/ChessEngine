@@ -172,7 +172,7 @@ std::tuple<float, movgen::Move> minmax_best(movgen::BoardPosition* pos, std::vec
 	uint16_t it = 0;
 
 // If not debug, choose randomly among the moves with the best eval, else choose the first move
-#ifdef NDEBUG
+#ifdef DEBUG
 	std::vector<uint16_t> best_move_index;
 #else
 	uint16_t best_move_index;
@@ -213,7 +213,7 @@ std::tuple<float, movgen::Move> minmax_best(movgen::BoardPosition* pos, std::vec
 #if LOG_SEARCH == 1
 			_root_node.data = std::format("_: {}", score);
 #endif
-#ifdef NDEBUG
+#ifdef DEBUG
 			best_move_index.clear();
 			best_move_index.push_back(it);
 #else
@@ -222,7 +222,7 @@ std::tuple<float, movgen::Move> minmax_best(movgen::BoardPosition* pos, std::vec
 			if(score > alpha)
 				alpha = score;
 		}
-#ifdef NDEBUG
+#ifdef DEBUG
 		else if(fuzzy_equal(score, best_value))
 			best_move_index.push_back(it);
 #endif
@@ -234,7 +234,7 @@ std::tuple<float, movgen::Move> minmax_best(movgen::BoardPosition* pos, std::vec
 
 	_PRINT_LOG_TO_FILE
 
-#ifdef NDEBUG
+#ifdef DEBUG
 	uint16_t final_index = uint16_t(rand() % best_move_index.size());
 	return std::make_tuple(best_value, gen_moves[best_move_index[final_index]]);
 #else

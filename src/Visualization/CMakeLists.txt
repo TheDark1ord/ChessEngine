@@ -20,6 +20,9 @@ add_executable(chess
 find_package(NanoSVG 1.0 CONFIG REQUIRED)
 target_link_libraries(chess PRIVATE NanoSVG::nanosvg NanoSVG::nanosvgrast)
 
+find_package(spdlog CONFIG REQUIRED)
+target_link_libraries(chess PRIVATE spdlog::spdlog)
+
 #Include SFML
 set(SFML_STATIC_LIBRARIES TRUE)
 find_package(SFML 2.6.0
